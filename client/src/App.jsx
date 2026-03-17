@@ -13,6 +13,8 @@ import Employees from "./portal/admin/Employees";
 import LeaveTypes from "./portal/admin/LeaveTypes";
 import Forms from "./portal/admin/Forms";
 import UpdateEmployee from "./portal/admin/UpdateEmployee";
+import RaiseAppraisal from "./portal/users/RaiseAppraisal";
+import AppraisalSubmissions from "./portal/users/AppraisalSubmissions";
 
 const App = () => {
   // Load user from localStorage to persist login on refresh
@@ -53,7 +55,7 @@ const App = () => {
         <Route
           path="/hr360/admin/*"
           element={
-            <ProtectedRoute userLogged={userLogged} allowedRoles={[0]}>
+            <ProtectedRoute userLogged={userLogged} allowedRoles={["admin"]}>
               <Layout userLogged={userLogged} userLoggedOut={userLoggedOut} />
             </ProtectedRoute>
           }
@@ -75,7 +77,7 @@ const App = () => {
         <Route
           path="/hr360/user/*"
           element={
-            <ProtectedRoute userLogged={userLogged} allowedRoles={[1]}>
+            <ProtectedRoute userLogged={userLogged} allowedRoles={["user"]}>
               <Layout userLogged={userLogged} userLoggedOut={userLoggedOut} />
             </ProtectedRoute>
           }
@@ -86,6 +88,8 @@ const App = () => {
             element={<Navigate to="employee-forms" replace />}
           />
           <Route path="employee-forms" element={<EmployeeForms />} />
+          <Route path="raise-appraisal" element={<RaiseAppraisal />} />
+          <Route path="appraisals" element={<AppraisalSubmissions />} />
         </Route>
 
         {/* Catch-all: redirect unknown paths */}

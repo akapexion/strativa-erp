@@ -30,7 +30,7 @@ const Login = ({userLoggedIn}) => {
               });
         userLoggedIn(res.data.loggedUser);
 
-        if(res.data.loggedUser.user_role === 1){
+        if(res.data.loggedUser.user_role === "user"){
         navigate('/hr360/user/employee-forms'); 
         }
         else {

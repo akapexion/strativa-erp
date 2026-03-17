@@ -61,7 +61,9 @@ const Header = ({userLoggedOut, userLogged}) => {
             </div>
 
 
-            {userLogged.user_role === 1 ?
+            {userLogged.user_role === "user" ?
+            <>
+            <Link to="/hr360/user/employee-forms">
             <button
               className="w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors group"
             >
@@ -70,6 +72,20 @@ const Header = ({userLoggedOut, userLogged}) => {
               </div>
               <span className="font-bold text-sm">Easy Forms</span>
             </button>
+            </Link>
+            
+
+            <Link to="/hr360/user/raise-appraisal">
+            <button
+              className="w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors group"
+            >
+              <div className="p-2 bg-gray-100 rounded-lg group-hover:bg-blue-100 transition-colors">
+                <FileText size={18} />
+              </div>
+              <span className="font-bold text-sm">Raise Appraisal</span>
+            </button>
+            </Link>
+            </>
             : 
             <>
             <button

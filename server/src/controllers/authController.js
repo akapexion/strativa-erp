@@ -29,7 +29,8 @@ export const login = async (req, res) => {
           user_email: user.user_email,
           user_code: user.user_code,
           user_role: user.user_role,
-          user_designation: user.user_designation
+          user_designation: user.user_designation,
+          user_image: user.user_image
         },
       });
   

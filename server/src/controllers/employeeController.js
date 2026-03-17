@@ -1,5 +1,6 @@
 import Employees from "../models/employees.js";
 import Users from "../models/users.js";
+import { generateEmployeeCode } from "../utils/generateEmployeeCode.js";
 
 export const addEmployee = async (req, res) => {
   try {
@@ -7,11 +8,10 @@ export const addEmployee = async (req, res) => {
 
     const fname = req.body.employee_fname || "";
     const lname = req.body.employee_lname || "";
-    const initials = ((fname[0] || "") + (lname[0] || "")).toUpperCase();
-    const uniqueNumber = Date.now().toString().slice(-3);
+    const employeeCode = generateEmployeeCode(fname, lname);
 
     const newEmployee = new Employees({
-      employee_code: `${initials}${uniqueNumber}`,
+      employee_code: employeeCode,
       employee_fname: req.body.employee_fname,
       employee_lname: req.body.employee_lname,
       employee_email: req.body.employee_email,
@@ -31,8 +31,9 @@ export const addEmployee = async (req, res) => {
     const newUser = new Users({
       user_fullname: employee_fname + " " + employee_lname,
       user_email: employee_email,
-      user_code: `${initials}${uniqueNumber}`,
+      user_code: employeeCode,
       user_designation: req.body.employee_designation,
+      user_image: req.file ? req.file.filename : "",
     });
 
     await newEmployee.save();

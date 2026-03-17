@@ -1,17 +1,13 @@
 import mongoose from 'mongoose'
 
 const appraisalsModel = new mongoose.Schema({
-    employee_id : {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Employee"
+    employee_code: {
+        type: String,
+        unique: true
     },
-    employee_code : {
-        type : String,
-        unique : true
-    },   
     employee_name: {
-    type: String,
-    required: true
+        type: String,
+        required: true
     },
     appraisal_joining_date: Date,
     appraisal_lastincrement_date: Date,
@@ -21,7 +17,7 @@ const appraisalsModel = new mongoose.Schema({
         enum: ["Yes", "No"],
         default: "No"
     }
-})
+    })
 
 const Appraisals = mongoose.model("Appraisal", appraisalsModel);
 
