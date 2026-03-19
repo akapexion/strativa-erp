@@ -1,13 +1,9 @@
 import mongoose from 'mongoose'
 
 const DFIModel = new mongoose.Schema({
-    employee_id : {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Employee"
-    },
     employee_code : {
         type : String,
-        unique : true
+        required : true
     },   
     employee_name: {
     type: String,

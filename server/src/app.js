@@ -6,6 +6,8 @@ import connectDB from "./config/db_connection.js";
 import formRoute from "./routes/formRoutes.js";
 import leaveTypeRoute from "./routes/leaveTypeRoutes.js";
 import appraisalRoute from "./routes/appraisalRoute.js";
+import DFIRoute from "./routes/DFIRoutes.js";
+import KPIRoute from "./routes/KPIRoutes.js";
 
 
 const app = express();
@@ -20,6 +22,8 @@ app.use("/admin", employeeRoute);
 app.use("/admin", formRoute);
 app.use("/user", formRoute);
 app.use("/user", appraisalRoute);
+app.use("/user", DFIRoute);
+app.use("/user", KPIRoute);
 app.use("/admin", leaveTypeRoute);
 
 app.listen(process.env.PORT || 5000, () => {

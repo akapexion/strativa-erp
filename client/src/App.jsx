@@ -15,6 +15,10 @@ import Forms from "./portal/admin/Forms";
 import UpdateEmployee from "./portal/admin/UpdateEmployee";
 import RaiseAppraisal from "./portal/users/RaiseAppraisal";
 import AppraisalSubmissions from "./portal/users/AppraisalSubmissions";
+import RaiseDFI from "./portal/users/RaiseDFI";
+import RaiseKPI from "./portal/users/RaiseKPI";
+import DFISubmissions from "./portal/users/DFISubmissions";
+import KPISubmissions from "./portal/users/KPISubmissions";
 
 const App = () => {
   // Load user from localStorage to persist login on refresh
@@ -89,6 +93,10 @@ const App = () => {
           />
           <Route path="employee-forms" element={<EmployeeForms />} />
           <Route path="raise-appraisal" element={<RaiseAppraisal />} />
+          <Route path="raise-dfi" element={<RaiseDFI />} />
+          <Route path="raise-kpi" element={<RaiseKPI />} />
+          <Route path="dfis" element={<DFISubmissions />} />
+          <Route path="kpis" element={<KPISubmissions />} />
           <Route path="appraisals" element={<AppraisalSubmissions />} />
         </Route>
 
