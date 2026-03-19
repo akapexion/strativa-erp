@@ -25,6 +25,7 @@ export const login = async (req, res) => {
         success: true,
         message: "Login successful",
         loggedUser: {
+          user_id: user._id,
           user_fullname: user.user_fullname,
           user_email: user.user_email,
           user_code: user.user_code,

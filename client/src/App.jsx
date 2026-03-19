@@ -19,6 +19,7 @@ import RaiseDFI from "./portal/users/RaiseDFI";
 import RaiseKPI from "./portal/users/RaiseKPI";
 import DFISubmissions from "./portal/users/DFISubmissions";
 import KPISubmissions from "./portal/users/KPISubmissions";
+import Profile from "./portal/Profile";
 
 const App = () => {
   // Load user from localStorage to persist login on refresh
@@ -75,6 +76,7 @@ const App = () => {
           <Route path="update-employee/:id" element={<UpdateEmployee />} />
           <Route path="employees" element={<Employees />} />
           <Route path="leave-types" element={<LeaveTypes />} />
+          <Route path="profile" element={<Profile />} />
         </Route>
 
         {/* User Routes (role 1) */}
@@ -98,6 +100,7 @@ const App = () => {
           <Route path="dfis" element={<DFISubmissions />} />
           <Route path="kpis" element={<KPISubmissions />} />
           <Route path="appraisals" element={<AppraisalSubmissions />} />
+          <Route path="profile" element={<Profile />} />
         </Route>
 
         {/* Catch-all: redirect unknown paths */}

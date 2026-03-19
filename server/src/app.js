@@ -8,6 +8,7 @@ import leaveTypeRoute from "./routes/leaveTypeRoutes.js";
 import appraisalRoute from "./routes/appraisalRoute.js";
 import DFIRoute from "./routes/DFIRoutes.js";
 import KPIRoute from "./routes/KPIRoutes.js";
+import profileRoute from "./routes/profileRoutes.js";
 
 
 const app = express();
@@ -25,6 +26,7 @@ app.use("/user", appraisalRoute);
 app.use("/user", DFIRoute);
 app.use("/user", KPIRoute);
 app.use("/admin", leaveTypeRoute);
+app.use("/profile", profileRoute);
 
 app.listen(process.env.PORT || 5000, () => {
   console.log("Server Started");
