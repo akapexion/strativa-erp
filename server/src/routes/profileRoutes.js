@@ -11,7 +11,6 @@ const profileRoute = express.Router();
 
 // ✅ Routes
 profileRoute.get("/:id", getProfile);
-profileRoute.put("/:id", updateProfile);
 profileRoute.put("/:id/upload-image", upload.single("employee_image"), uploadProfileImage);
 profileRoute.put("/:id/change-password", changePassword);
 

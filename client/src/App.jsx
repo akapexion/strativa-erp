@@ -20,6 +20,7 @@ import DFISubmissions from "./portal/users/DFISubmissions";
 import KPISubmissions from "./portal/users/KPISubmissions";
 import Profile from "./portal/Profile";
 import ProfileChangePassword from "./portal/ProfileChangePassword";
+import EmployeeFormDetail from "./portal/users/EmployeeFormDetail";
 
 const App = () => {
   // Load user from localStorage to persist login on refresh
@@ -94,6 +95,7 @@ const App = () => {
             element={<Navigate to="employee-forms" replace />}
           />
           <Route path="employee-forms" element={<EmployeeForms />} />
+          <Route path="form-submission/:id" element={<EmployeeFormDetail />} />
           <Route path="raise-appraisal" element={<RaiseAppraisal />} />
           <Route path="raise-dfi" element={<RaiseDFI />} />
           <Route path="raise-kpi" element={<RaiseKPI />} />

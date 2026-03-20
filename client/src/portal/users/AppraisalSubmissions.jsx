@@ -27,6 +27,7 @@ const AppraisalSubmissions = () => {
     setError(null);
     try {
       const user = JSON.parse(localStorage.getItem("user"));
+      console.log(user);
       const res = await axios.get(
         `http://localhost:5000/user/appraisals/${user.user_code}`
       );
@@ -45,7 +46,6 @@ const AppraisalSubmissions = () => {
     fetchSubmissions();
   }, []);
 
- 
   const totalCount = submissions.length;
   const qualifiedCount = submissions.filter(
     (s) => s.appraisal_sep_qualification?.toLowerCase() === "yes"
@@ -226,14 +226,11 @@ const AppraisalSubmissions = () => {
                       {/* Arrow */}
                       <td className="px-4 py-4">
                         <button
-                          onClick={() =>
-                            navigate(
-                              `/admin/raise-appraisal/${s._id}`
-                            )
-                          }
                           className="p-1.5 rounded-lg text-slate-300 group-hover:text-slate-500 hover:bg-slate-100 transition-all"
                         >
-                          <ChevronRight size={16} />
+                          <Link to={`/hr360/user/form-submission/${s._id}`}>
+                              <ChevronRight size={16} />
+                          </Link>
                         </button>
                       </td>
                     </tr>

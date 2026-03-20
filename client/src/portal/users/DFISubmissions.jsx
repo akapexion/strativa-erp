@@ -173,10 +173,11 @@ const DFISubmissions = () => {
                       {/* Arrow */}
                       <td className="px-6 py-4 text-right">
                         <button
-                          onClick={() => navigate(`/admin/dfi/${s._id}`)}
                           className="p-1.5 text-slate-300 group-hover:text-slate-500 hover:bg-slate-100 rounded-lg transition-all"
                         >
+                          <Link to={`/hr360/user/form-submission/${s._id}`}>
                           <ChevronRight size={16} />
+                          </Link>
                         </button>
                       </td>
                     </tr>

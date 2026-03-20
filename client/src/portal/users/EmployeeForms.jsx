@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import {
-  FileText,
+  Form,
   ArrowRight,
   Filter,
   LayoutGrid,
@@ -18,17 +18,20 @@ const EmployeeForms = () => {
     {
       name: "Annual Appraisal",
       category: "Academics",
-      to: "/hr360/user/raise-appraisal",
+      toRaise: "/hr360/user/raise-appraisal",
+      toSubmissions: "/hr360/user/appraisals"
     },
     {
       name: "Direct Financial Incentive - DFI",
       category: "Academics",
-      to: "/hr360/user/raise-dfi",
+      toRaise: "/hr360/user/raise-dfi",
+      toSubmissions: "/hr360/user/dfis"
     },
     {
       name: "Key Performance Indicator - KPI",
       category: "Academics",
-      to: "/hr360/user/raise-kpi",
+      toRaise: "/hr360/user/raise-kpi",
+      toSubmissions: "/hr360/user/kpis"
     },
   ];
 
@@ -49,11 +52,9 @@ const EmployeeForms = () => {
   const fetchFormSubmissions = async () => {
     try {
       const user = JSON.parse(localStorage.getItem("user"));
-
       const response = await axios.get(
         `http://localhost:5000/user/current-employee-formsubmissions/${user.user_code}`
       );
-
       setformsSubmissions(response.data.currentEmployeeFormSubmissions);
     } catch (err) {
       console.log(err);
@@ -70,9 +71,7 @@ const EmployeeForms = () => {
 
         {/* HEADER */}
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">
-            Employee Forms
-          </h1>
+          <h1 className="text-2xl font-bold text-slate-900">Employee Forms</h1>
           <p className="text-sm text-slate-500 mt-1">
             Browse available forms or track your submission status.
           </p>
@@ -91,7 +90,6 @@ const EmployeeForms = () => {
             <LayoutGrid size={16} />
             Submissions
           </button>
-
           <button
             onClick={() => setActiveTab("status")}
             className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold transition-all ${
@@ -105,156 +103,195 @@ const EmployeeForms = () => {
           </button>
         </div>
 
-        {/* ───────────── SUBMISSIONS TAB ───────────── */}
+        {/* ───────────── SUBMISSIONS TAB — TABLE ───────────── */}
         {activeTab === "listing" && (
-          <div className="space-y-6">
-
-            {formsSubmissions.length === 0 ? (
-              <div className="bg-white rounded-2xl border border-gray-300 shadow-sm flex flex-col items-center justify-center py-24 gap-3">
-                <div className="p-4 bg-slate-100 rounded-full">
-                  <FileText size={30} className="text-slate-400" />
-                </div>
-                <p className="font-bold text-slate-700">
-                  No forms submissions as of now
-                </p>
-                <p className="text-sm text-slate-400">
-                  Check back later
-                </p>
-              </div>
-            ) : (
-              <div className="grid md:grid-cols-2 gap-5">
-                {formsSubmissions.map((form) => (
-                  <div
-                    key={form._id}
-                    className="group bg-white p-5 rounded-2xl border shadow-md border-gray-300 hover:border-blue-500 hover:shadow-lg transition-all flex items-center justify-between"
-                  >
-                    {/* LEFT */}
-                    <div className="flex items-center gap-4">
-
-                      <div className="p-3 bg-blue-50 rounded-xl text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-all">
-                        <FileText size={22} />
-                      </div>
-
-                      <div>
-                        <h3 className="font-bold text-slate-900 text-sm">
-                          {form.form_title || "Untitled Form"}
-                        </h3>
-
-                        <p className="text-xs text-slate-400 mt-1">
-                          Submitted by {form.employee_name}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* RIGHT */}
-                    <div className="flex items-center gap-3">
-                      <span
-                        className={`px-3 py-1 text-xs font-bold rounded-lg ${getStatusStyles(
-                          form.form_status
-                        )}`}
-                      >
-                        {form.form_status || "Pending"}
-                      </span>
-
-                      <ArrowRight
-                        size={18}
-                        className="text-slate-300 group-hover:text-blue-600 group-hover:translate-x-1 transition-all"
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* ───────────── EASY FORMS TAB ───────────── */}
-        {activeTab === "status" && (
           <section className="bg-white rounded-2xl border border-gray-300 shadow-sm overflow-hidden">
 
-            {/* HEADER */}
+            {/* SECTION HEADER */}
             <div className="px-8 py-5 border-b border-gray-300 bg-slate-50 flex items-center justify-between">
               <div className="flex items-center gap-2 text-blue-600">
-                <ClipboardList size={18} />
-                <h2 className="font-bold text-slate-800">
-                  Easy Forms
-                </h2>
+                <LayoutGrid size={18} />
+                <h2 className="font-bold text-slate-800">My Submissions</h2>
               </div>
+              <span className="px-2.5 py-1 bg-blue-50 border border-blue-200 text-blue-700 font-bold text-xs rounded-lg">
+                {formsSubmissions.length} total
+              </span>
+            </div>
 
-              <button className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold text-slate-500 hover:bg-slate-100 rounded-lg">
+            {formsSubmissions.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-24 gap-3">
+                <div className="p-4 bg-slate-100 rounded-full">
+                  <Form size={30} className="text-slate-400" />
+                </div>
+                <p className="font-bold text-slate-700">No form submissions as of now</p>
+                <p className="text-sm text-slate-400">Check back later.</p>
+              </div>
+            ) : (
+              <>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-gray-300 bg-slate-50">
+                        <th className="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wide">
+                          Form No
+                        </th>
+                        <th className="text-left px-8 py-3 text-xs font-bold text-slate-500 uppercase tracking-wide">
+                          Form Name
+                        </th>
+                        <th className="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wide">
+                          Initiated By
+                        </th>
+                        <th className="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wide">
+                          Status
+                        </th>
+                        <th className="px-4 py-3" />
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {formsSubmissions.map((form) => (
+                        <tr
+                          key={form._id}
+                          className="hover:bg-slate-50 transition-colors group"
+                        >
+                          {/* Form No */}
+                          <td className="px-8 py-4">
+                            <div className="flex items-center gap-3">
+                              <div className="p-2 bg-blue-50 rounded-lg text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors shrink-0">
+                                <Form size={15} />
+                              </div>
+                              <span className="font-bold text-slate-800">
+                                {form.form_no || "Untitled Form No"}
+                              </span>
+                            </div>
+                          </td>
+                          {/* Form Name */}
+                          <td className="px-8 py-4">
+                            <div className="flex items-center gap-3">
+                              <span className="font-bold text-slate-800">
+                                {form.form_title || "Untitled Form"}
+                              </span>
+                            </div>
+                          </td>
+
+                          {/* Submitted By */}
+                          <td className="px-4 py-4 text-slate-500 text-sm">
+                            {form.employee_name || "—"}
+                          </td>
+
+                          {/* Status */}
+                          <td className="px-4 py-4">
+                            <span
+                              className={`px-3 py-1 text-xs font-bold rounded-lg ${getStatusStyles(
+                                form.form_status
+                              )}`}
+                            >
+                              {form.form_status || "Pending"}
+                            </span>
+                          </td>
+
+                          {/* Arrow */}
+                          <td className="px-4 py-4 text-right">
+                            <Link to={`/hr360/user/form-submission/${form._id}`}>
+                            <ArrowRight
+                              size={18}
+                              className="text-slate-300 group-hover:text-blue-600 group-hover:translate-x-1 transition-all ml-auto"
+                            />
+                            </Link>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* FOOTER */}
+                <div className="px-8 py-4 border-t border-gray-300 bg-slate-50">
+                  <p className="text-xs text-slate-400">
+                    Showing{" "}
+                    <span className="font-bold text-slate-700">
+                      {formsSubmissions.length}
+                    </span>{" "}
+                    submissions
+                  </p>
+                </div>
+              </>
+            )}
+          </section>
+        )}
+
+        {/* ───────────── EASY FORMS TAB — CARDS ───────────── */}
+        {activeTab === "status" && (
+          <div className="space-y-5">
+
+            {/* SECTION HEADER */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-blue-600">
+                <ClipboardList size={18} />
+                <h2 className="font-bold text-slate-800">Easy Forms</h2>
+              </div>
+              <button className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold text-slate-500 hover:bg-white border border-transparent hover:border-gray-300 rounded-lg transition-all">
                 <Filter size={14} />
                 Filter
               </button>
             </div>
 
-            {/* TABLE */}
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-gray-300 bg-slate-50">
-                    <th className="text-left px-8 py-3 text-xs font-bold text-slate-500 uppercase">
-                      Form Name
-                    </th>
-                    <th className="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase">
-                      Category
-                    </th>
-                    <th className="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase">
-                      Action
-                    </th>
-                  </tr>
-                </thead>
+            {/* CARDS GRID */}
+            <div className="grid md:grid-cols-2 gap-5">
+              {submissions.map((item, index) => (
+                <div
+                  key={index}
+                  className="group bg-white p-5 rounded-2xl border border-gray-300 shadow-md hover:border-blue-500 hover:shadow-lg transition-all flex items-center justify-between"
+                >
+                  {/* LEFT */}
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 bg-blue-50 rounded-xl text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-all shrink-0">
+                      <Form size={22} />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-slate-900 text-sm">
+                        {item.name}
+                      </h3>
+                      <span className="inline-flex items-center gap-1 mt-1.5 px-2.5 py-0.5 bg-blue-50 border border-blue-200 text-blue-700 font-bold text-xs rounded-lg">
+                        <CheckCircle2 size={11} />
+                        {item.category}
+                      </span>
+                    </div>
+                  </div>
 
-                <tbody className="divide-y divide-gray-200">
-                  {submissions.map((item, index) => (
-                    <tr key={index} className="hover:bg-slate-50 group">
-
-                      <td className="px-8 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="p-2 bg-blue-50 rounded-lg text-blue-600 group-hover:bg-blue-600 group-hover:text-white">
-                            <FileText size={15} />
-                          </div>
-                          <span className="font-bold text-slate-800">
-                            {item.name}
-                          </span>
-                        </div>
-                      </td>
-
-                      <td className="px-4 py-4">
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 border border-blue-200 text-blue-700 font-bold text-xs rounded-lg">
-                          <CheckCircle2 size={12} />
-                          {item.category}
-                        </span>
-                      </td>
-
-                      <td className="px-4 py-4">
-                        <Link
-                          to={item.to}
-                          className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-blue-600 text-white text-xs font-bold rounded-lg hover:bg-blue-700"
-                        >
-                          Raise
-                          <ArrowRight size={13} />
-                        </Link>
-                      </td>
-
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                  {/* RIGHT — Raise Button */}
+                  <div className="flex gap-1">
+                  <Link
+                    to={item.toRaise}
+                    className="flex items-center gap-1.5 px-4 py-2 border border-blue-600 text-blue-600 text-xs font-bold rounded-lg shadow shadow-blue-100 hover:bg-blue-700 hover:text-white transition-all shrink-0"
+                  >
+                    Raise
+                    <ArrowRight size={13} />
+                  </Link>
+                  <Link
+                    to={item.toSubmissions}
+                    className="flex items-center gap-1.5 px-4 py-2 border border-blue-600 text-blue-600 text-xs font-bold rounded-lg shadow shadow-blue-100 hover:bg-blue-700 hover:text-white transition-all shrink-0"
+                  >
+                    Submissions
+                    <ArrowRight size={13} />
+                  </Link>
+                  </div>
+                </div>
+                
+              ))}
             </div>
 
-            {/* FOOTER */}
-            <div className="px-8 py-4 border-t border-gray-300 bg-slate-50">
-              <p className="text-xs text-slate-400">
-                Showing{" "}
-                <span className="font-bold text-slate-700">
-                  {submissions.length}
-                </span>{" "}
-                forms
-              </p>
-            </div>
+            {/* FOOTER COUNT */}
+            <p className="text-xs text-slate-400 px-1">
+              Showing{" "}
+              <span className="font-bold text-slate-700">
+                {submissions.length}
+              </span>{" "}
+              forms
+            </p>
 
-          </section>
+          </div>
         )}
+
       </div>
     </div>
   );

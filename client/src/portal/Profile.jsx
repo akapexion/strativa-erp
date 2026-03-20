@@ -3,17 +3,11 @@ import {
   ArrowLeft,
   UserCircle,
   Briefcase,
-  GraduationCap,
-  Calendar,
-  Building2,
-  UserCog,
   Mail,
-  Phone,
-  CreditCard,
-  Cake,
-  Heart,
+  Hash,
+  UserCog,
+  ShieldCheck,
   Camera,
-  KeyRound,
   Loader2,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -21,149 +15,160 @@ import axios from "axios";
 
 const Profile = () => {
   const navigate = useNavigate();
-  const fileInputRef = useRef(null);
 
-  // ✅ Use _id from localStorage
   const storedUser = JSON.parse(localStorage.getItem("user"));
-  const employeeId = storedUser?.user_id;
+  const employeeId = storedUser.user_id;
 
   const [profile, setProfile] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null);
-  const [imageLoading, setImageLoading] = useState(false);
 
-  // ✅ Fetch Profile from backend
   const fetchProfile = async () => {
     try {
       const res = await axios.get(
-        `http://localhost:5000/profile/${employeeId}`
+        `http://localhost:5000/profile/${employeeId}`,
       );
       setProfile(res.data);
+      console.log(res.data);
     } catch (err) {
       console.error(err);
     }
   };
 
   useEffect(() => {
-    if (employeeId) fetchProfile();
-  }, [employeeId]);
+    fetchProfile();
+  }, []);
 
-  // ✅ Upload Image
-  const handleImageChange = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    setImagePreview(URL.createObjectURL(file));
-    setImageLoading(true);
-
-    try {
-      const formData = new FormData();
-      formData.append("employee_image", file);
-
-      await axios.put(
-        `http://localhost:5000/profile/${employeeId}/upload-image`,
-        formData,
-        { headers: { "Content-Type": "multipart/form-data" } }
-      );
-
-      fetchProfile(); // refresh image
-    } catch (err) {
-      console.error(err);
-      setImagePreview(null);
-    } finally {
-      setImageLoading(false);
-    }
-  };
-
-  
-
-  // ✅ Handle avatar image: filename or full URL
-  const avatarSrc =
-    imagePreview ||
-    (profile?.user_image
-      ? profile.user_image.startsWith("http")
-        ? profile.user_image
-        : `http://localhost:5000/uploads/${profile.user_image}`
-      : "http://localhost:5000/uploads/default.png");
 
   return (
     <div className="min-h-screen bg-slate-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-300 px-6 py-4 flex justify-between items-center">
+      {/* ── Header ── */}
+      <div className="bg-white border-b border-gray-300 px-6 py-4 flex items-center justify-between sticky top-0 z-10">
         <div className="flex items-center gap-4">
-          <button onClick={() => navigate(-1)}>
-            <ArrowLeft />
+          <button
+            onClick={() => navigate(-1)}
+            className="p-2 hover:bg-slate-100 rounded-full text-slate-500 transition-colors"
+          >
+            <ArrowLeft size={20} />
           </button>
-          <h1 className="text-xl font-bold">My Profile</h1>
+          <h1 className="text-xl font-bold text-slate-900 tracking-tight">
+            My Profile
+          </h1>
         </div>
       </div>
 
-      <main className="max-w-4xl mx-auto p-6 space-y-8">
-        {/* Profile Card */}
+      <main className="max-w-4xl mx-auto px-6 py-10 space-y-8">
+        {/* ── Hero Card ── */}
         <div className="bg-white rounded-2xl border border-gray-300 shadow-sm overflow-hidden">
-          <div className="h-24 bg-blue-100" />
-          <div className="px-8 pb-6 flex items-end gap-6 -mt-12">
+          {/* Banner */}
+          <div className="h-28 bg-gradient-to-r from-blue-600 to-blue-400" />
+
+          <div className="px-8 pb-7 flex flex-col sm:flex-row sm:items-end gap-5 -mt-12">
             {/* Avatar */}
-            <div className="relative">
-              <div className="w-24 h-24 rounded-xl overflow-hidden border-4 border-white">
+            <div className="relative shrink-0">
+              <div className="w-24 h-24 rounded-2xl border-4 border-white shadow-md bg-blue-100 overflow-hidden flex items-center justify-center">
                 <img
-                  src={avatarSrc}
+                  src={`http://localhost:5000/uploads/${profile?.user_image}`
+                    }
                   alt="profile"
                   className="w-full h-full object-cover"
                 />
               </div>
-              <button
-                onClick={() => fileInputRef.current.click()}
-                className="absolute bottom-0 right-0 bg-blue-600 p-1 text-white rounded"
-              >
-                {imageLoading ? (
-                  <Loader2 className="animate-spin" size={14} />
-                ) : (
-                  <Camera size={14} />
-                )}
-              </button>
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleImageChange}
-                className="hidden"
-              />
             </div>
 
-            {/* Info */}
-            <div>
-              <h2 className="text-xl font-bold">{profile?.user_fullname}</h2>
-              <p className="text-sm text-gray-500">{profile?.user_designation}</p>
+            {/* Name & Meta */}
+            <div className="pb-1">
+              <h2 className="text-xl font-bold text-slate-900">
+                {profile?.user_fullname || "—"}
+              </h2>
+              <div className="flex flex-wrap items-center gap-3 mt-1">
+                <span className="text-sm text-slate-500 flex items-center gap-1.5">
+                  <UserCog size={14} className="text-slate-400" />
+                  {profile?.user_designation || "—"}
+                </span>
+                {profile?.user_role && (
+                  <>
+                    <span className="text-slate-300">·</span>
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-blue-50 border border-blue-200 text-blue-700 font-bold text-xs rounded-lg">
+                      <ShieldCheck size={12} />
+                      {profile.user_role}
+                    </span>
+                  </>
+                )}
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Personal Details */}
-        <section className="bg-white rounded-xl border border-gray-300 p-6">
-          <h2 className="font-bold mb-4">Personal Details</h2>
-          <div className="grid md:grid-cols-2 gap-4">
-            <p>
-              <b>Email:</b> {profile?.user_email}
-            </p>
-            <p>
-              <b>Code:</b> {profile?.user_code}
-            </p>
+        {/* ── Personal Details ── */}
+        <section className="bg-white rounded-2xl border border-gray-300 shadow-sm overflow-hidden">
+          <div className="px-8 py-5 border-b border-gray-200 bg-slate-50 flex items-center gap-2 text-blue-600">
+            <UserCircle size={18} />
+            <h2 className="font-bold text-slate-800">Personal Details</h2>
+          </div>
+          <div className="p-8 grid md:grid-cols-2 gap-y-6 gap-x-10">
+            {[
+              {
+                icon: <Mail size={15} />,
+                label: "Email Address",
+                value: profile?.user_email,
+              },
+              {
+                icon: <Hash size={15} />,
+                label: "Employee Code",
+                value: profile?.user_code,
+              },
+            ].map(({ icon, label, value }) => (
+              <div key={label} className="flex items-start gap-3">
+                <div className="mt-0.5 p-2 bg-slate-100 rounded-lg text-slate-500 shrink-0">
+                  {icon}
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">
+                    {label}
+                  </p>
+                  <p className="text-sm font-bold text-slate-800 mt-0.5">
+                    {value || "—"}
+                  </p>
+                </div>
+              </div>
+            ))}
           </div>
         </section>
 
-        {/* Employment */}
-        <section className="bg-white rounded-xl border border-gray-300 p-6">
-          <h2 className="font-bold mb-4">Employment</h2>
-          <div className="grid md:grid-cols-2 gap-4">
-            <p>
-              <b>Designation:</b> {profile?.user_designation}
-            </p>
-            <p>
-              <b>Role:</b> {profile?.user_role}
-            </p>
+        {/* ── Employment Details ── */}
+        <section className="bg-white rounded-2xl border border-gray-300 shadow-sm overflow-hidden">
+          <div className="px-8 py-5 border-b border-gray-200 bg-slate-50 flex items-center gap-2 text-purple-600">
+            <Briefcase size={18} />
+            <h2 className="font-bold text-slate-800">Employment Details</h2>
+          </div>
+          <div className="p-8 grid md:grid-cols-2 gap-y-6 gap-x-10">
+            {[
+              {
+                icon: <UserCog size={15} />,
+                label: "Designation",
+                value: profile?.user_designation,
+              },
+              {
+                icon: <ShieldCheck size={15} />,
+                label: "Role",
+                value: profile?.user_role,
+              },
+            ].map(({ icon, label, value }) => (
+              <div key={label} className="flex items-start gap-3">
+                <div className="mt-0.5 p-2 bg-slate-100 rounded-lg text-slate-500 shrink-0">
+                  {icon}
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">
+                    {label}
+                  </p>
+                  <p className="text-sm font-bold text-slate-800 mt-0.5">
+                    {value || "—"}
+                  </p>
+                </div>
+              </div>
+            ))}
           </div>
         </section>
-
-       
       </main>
     </div>
   );

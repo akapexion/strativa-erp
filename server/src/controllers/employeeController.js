@@ -111,3 +111,21 @@ export const currentEmployeeFormSubmissions = async(req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 }
+
+export const formSubmissionDetail = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    let form = await Appraisals.findById(id);
+    if (!form) form = await DFIForms.findById(id);
+    if (!form) form = await KPIForms.findById(id);
+
+    if (!form) {
+      return res.status(404).json({ success: false, message: "Form not found" });
+    }
+
+    res.status(200).json({ success: true, formSubmission: form });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};

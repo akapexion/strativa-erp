@@ -1,6 +1,11 @@
 import mongoose from 'mongoose'
 
 const KPIModel = new mongoose.Schema({
+    form_no: {
+        type: String,
+        unique: true,
+        default: () => `FORM-${Math.floor(Math.random() * 1000)}`
+    },
     employee_code : {
         type : String,
         required : true
