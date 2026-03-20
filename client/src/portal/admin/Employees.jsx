@@ -12,6 +12,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import { gooeyToast } from 'goey-toast';
 
 const Employees = () => {
   const [employees, setEmployees] = useState([]);
@@ -41,6 +42,11 @@ const Employees = () => {
         );
         if (data.success) {
           setEmployees(employees.filter((emp) => emp._id !== id));
+          gooeyToast.success("Employee Deleted Successfully", {
+                        fillColor: "#FFF",
+                        bounce: 0.45,
+                        timing: { displayDuration: 2500 },
+                      });
         }
       } catch (err) {
         console.error("Delete failed", err);

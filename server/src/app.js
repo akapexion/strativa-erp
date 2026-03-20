@@ -20,6 +20,7 @@ connectDB();
 
 app.use("/auth", authRoute);
 app.use("/admin", employeeRoute);
+app.use("/user", employeeRoute);
 app.use("/admin", formRoute);
 app.use("/user", formRoute);
 app.use("/user", appraisalRoute);

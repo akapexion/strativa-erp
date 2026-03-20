@@ -24,6 +24,14 @@ const KPIModel = new mongoose.Schema({
     kpi_batch_attendence_percentage: {
         type: String,
         required: true
+    },
+    form_title: {
+        type: String,
+        default: "Key Performance Indicator - KPI"
+    },
+    form_status: {
+        type: String,
+        default: "Pending"
     }
 })
 

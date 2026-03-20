@@ -1,5 +1,8 @@
 import Employees from "../models/employees.js";
 import Users from "../models/users.js";
+import Appraisals from "../models/appraisals.js";
+import DFIForms from "../models/dfi.js";
+import KPIForms from "../models/kpi.js";
 import { generateEmployeeCode } from "../utils/generateEmployeeCode.js";
 
 export const addEmployee = async (req, res) => {
@@ -82,6 +85,28 @@ export const updateEmployee = async(req, res) => {
    try {
     const updatedEmployee = await Employees.findByIdAndUpdate(req.params.id, req.body, { new: true });
     res.status(200).json({ success: true, message: "Employee updated", updatedEmployee });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+}
+
+export const deleteEmployee = async(req, res) => {
+   try {
+    const deletedEmployee = await Employees.findByIdAndDelete(req.params.id);
+    res.status(200).json({ success: true, message: "Employee deleted", deletedEmployee });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+}
+
+export const currentEmployeeFormSubmissions = async(req, res) => {
+   try {
+    const currentEmployeeAppraisals = await Appraisals.find({employee_code: req.params.code});
+    const currentEmployeeDFIs = await DFIForms.find({employee_code: req.params.code});
+    const currentEmployeeKPIs = await KPIForms.find({employee_code: req.params.code});
+
+    const currentEmployeeFormSubmissions = [...currentEmployeeAppraisals, ...currentEmployeeDFIs, ...currentEmployeeKPIs];
+    res.status(200).json({ success: true, currentEmployeeFormSubmissions });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

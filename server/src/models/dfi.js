@@ -16,6 +16,14 @@ const DFIModel = new mongoose.Schema({
     dfi_amount: {
         type: Number,
         required: true
+    },
+    form_title: {
+        type: String,
+        default: "Direct Financial Incentive - DFI"
+    },
+    form_status: {
+        type: String,
+        default: "Pending"
     }
 })
 

@@ -31,13 +31,6 @@ const Profile = () => {
   const [imagePreview, setImagePreview] = useState(null);
   const [imageLoading, setImageLoading] = useState(false);
 
-  // ✅ Password states
-  const [passwords, setPasswords] = useState({
-    currentPassword: "",
-    newPassword: "",
-    confirmPassword: "",
-  });
-
   // ✅ Fetch Profile from backend
   const fetchProfile = async () => {
     try {
@@ -81,29 +74,7 @@ const Profile = () => {
     }
   };
 
-  // ✅ Change Password Handler
-  const handleChangePassword = async () => {
-    if (passwords.newPassword !== passwords.confirmPassword) {
-      alert("New password and confirm password do not match");
-      return;
-    }
-
-    try {
-      await axios.put(
-        `http://localhost:5000/profile/${employeeId}/change-password`,
-        passwords
-      );
-
-      alert("Password updated successfully");
-      setPasswords({
-        currentPassword: "",
-        newPassword: "",
-        confirmPassword: "",
-      });
-    } catch (err) {
-      alert(err.response?.data?.message || "Error updating password");
-    }
-  };
+  
 
   // ✅ Handle avatar image: filename or full URL
   const avatarSrc =
@@ -192,31 +163,7 @@ const Profile = () => {
           </div>
         </section>
 
-        {/* Change Password */}
-        <section className="bg-white rounded-xl border border-gray-300 p-6">
-          <h2 className="font-bold mb-4">Change Password</h2>
-          <div className="space-y-3">
-            {["currentPassword", "newPassword", "confirmPassword"].map((field) => (
-              <input
-                key={field}
-                type="password"
-                placeholder={field}
-                value={passwords[field]}
-                onChange={(e) =>
-                  setPasswords({ ...passwords, [field]: e.target.value })
-                }
-                className="w-full border border-gray-300 p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            ))}
-
-            <button
-              onClick={handleChangePassword}
-              className="bg-blue-600 text-white px-4 py-2 rounded"
-            >
-              Update Password
-            </button>
-          </div>
-        </section>
+       
       </main>
     </div>
   );

@@ -185,7 +185,11 @@ const Header = ({ userLoggedOut, userLogged }) => {
 
               <button className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-blue-600 transition-colors">
                 <Key size={18} className="text-slate-400" />
-                Change Password
+                {userLogged.user_role === "admin" ? (
+                  <Link to="/hr360/admin/profile-changepassword">Change Password</Link>
+                ) : (
+                  <Link to="/hr360/user/profile-changepassword">Change Password</Link>
+                )}
               </button>
 
               <div className="my-2 border-t border-slate-100" />

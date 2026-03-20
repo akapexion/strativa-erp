@@ -11,7 +11,6 @@ import { gooeyToast } from "goey-toast";
 import ProtectedRoute from "./portal/ProtectedRoute";
 import Employees from "./portal/admin/Employees";
 import LeaveTypes from "./portal/admin/LeaveTypes";
-import Forms from "./portal/admin/Forms";
 import UpdateEmployee from "./portal/admin/UpdateEmployee";
 import RaiseAppraisal from "./portal/users/RaiseAppraisal";
 import AppraisalSubmissions from "./portal/users/AppraisalSubmissions";
@@ -20,6 +19,7 @@ import RaiseKPI from "./portal/users/RaiseKPI";
 import DFISubmissions from "./portal/users/DFISubmissions";
 import KPISubmissions from "./portal/users/KPISubmissions";
 import Profile from "./portal/Profile";
+import ProfileChangePassword from "./portal/ProfileChangePassword";
 
 const App = () => {
   // Load user from localStorage to persist login on refresh
@@ -71,12 +71,12 @@ const App = () => {
             element={<Navigate to="add-employee" replace />}
           />
           <Route path="add-form" element={<AddForm />} />
-          <Route path="forms" element={<Forms />} />
           <Route path="add-employee" element={<AddEmployee />} />
           <Route path="update-employee/:id" element={<UpdateEmployee />} />
           <Route path="employees" element={<Employees />} />
           <Route path="leave-types" element={<LeaveTypes />} />
           <Route path="profile" element={<Profile />} />
+          <Route path="profile-changepassword" element={<ProfileChangePassword />} />
         </Route>
 
         {/* User Routes (role 1) */}
@@ -101,6 +101,7 @@ const App = () => {
           <Route path="kpis" element={<KPISubmissions />} />
           <Route path="appraisals" element={<AppraisalSubmissions />} />
           <Route path="profile" element={<Profile />} />
+          <Route path="profile-changepassword" element={<ProfileChangePassword />} />
         </Route>
 
         {/* Catch-all: redirect unknown paths */}
