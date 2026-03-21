@@ -65,6 +65,10 @@ const employeesModel = new mongoose.Schema({
         type: Date,
         required: true
     },
+    is_manager: {
+    type: Boolean,
+    default: false,
+  }
 })
 
 const Employees = mongoose.model("Employee", employeesModel);
