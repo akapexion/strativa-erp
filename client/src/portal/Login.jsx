@@ -33,6 +33,9 @@ const Login = ({userLoggedIn}) => {
         if(res.data.loggedUser.user_role === "user"){
         navigate('/hr360/user/employee-forms'); 
         }
+        else if(res.data.loggedUser.user_role === "manager"){
+          navigate('/hr360/manager/form-requests');
+        }
         else {
           navigate('/hr360/admin/add-employee'); 
         }

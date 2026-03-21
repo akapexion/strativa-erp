@@ -28,7 +28,20 @@ const DFIModel = new mongoose.Schema({
     },
     form_status: {
         type: String,
-        default: "Pending"
+        enum: ["pending", "approved", "rejected"],
+      default: "pending"
+    },
+    manager_1_remarks: {
+        type: String,
+        default: ""
+    },
+    manager_2_remarks: {
+        type: String,
+        default: ""
+    },
+    manager_3_remarks: {
+        type: String,
+        default: ""
     }
 })
 

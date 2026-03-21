@@ -29,6 +29,7 @@ export const addEmployee = async (req, res) => {
       employee_salary: req.body.employee_salary,
       employee_joiningdate: req.body.employee_joiningdate,
       employee_image: req.file ? req.file.filename : "",
+      is_manager: req.body.is_manager
     });
 
     const newUser = new Users({
@@ -37,6 +38,8 @@ export const addEmployee = async (req, res) => {
       user_code: employeeCode,
       user_designation: req.body.employee_designation,
       user_image: req.file ? req.file.filename : "",
+      user_role: req.body.is_manager ? "manager" : "user",
+      is_manager: req.body.is_manager
     });
 
     await newEmployee.save();

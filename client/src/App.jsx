@@ -21,6 +21,7 @@ import KPISubmissions from "./portal/users/KPISubmissions";
 import Profile from "./portal/Profile";
 import ProfileChangePassword from "./portal/ProfileChangePassword";
 import EmployeeFormDetail from "./portal/users/EmployeeFormDetail";
+import FormRequests from "./portal/manager/FormRequests";
 
 const App = () => {
   // Load user from localStorage to persist login on refresh
@@ -57,7 +58,7 @@ const App = () => {
         {/* Login */}
         <Route path="/login" element={<Login userLoggedIn={userLoggedIn} />} />
 
-        {/* Admin Routes (role 0) */}
+        {/* Admin Routes */}
         <Route
           path="/hr360/admin/*"
           element={
@@ -80,7 +81,7 @@ const App = () => {
           <Route path="profile-changepassword" element={<ProfileChangePassword />} />
         </Route>
 
-        {/* User Routes (role 1) */}
+        {/* User Routes */}
         <Route
           path="/hr360/user/*"
           element={
@@ -102,6 +103,26 @@ const App = () => {
           <Route path="dfis" element={<DFISubmissions />} />
           <Route path="kpis" element={<KPISubmissions />} />
           <Route path="appraisals" element={<AppraisalSubmissions />} />
+          <Route path="profile" element={<Profile />} />
+          <Route path="profile-changepassword" element={<ProfileChangePassword />} />
+        </Route>
+
+        {/* Manager Routes */}
+        <Route
+          path="/hr360/manager/*"
+          element={
+            <ProtectedRoute userLogged={userLogged} allowedRoles={["manager"]}>
+              <Layout userLogged={userLogged} userLoggedOut={userLoggedOut} />
+            </ProtectedRoute>
+          }
+        >
+          {/* Default user landing page */}
+          <Route
+            index
+            element={<Navigate to="form-requests" replace />}
+          />
+          <Route path="form-requests" element={<FormRequests />} />
+          <Route path="form-requests/:id" element={<EmployeeFormDetail />} />
           <Route path="profile" element={<Profile />} />
           <Route path="profile-changepassword" element={<ProfileChangePassword />} />
         </Route>
