@@ -38,39 +38,71 @@ export const singleFormRequest = async (req, res) => {
 export const managerAction = async (req, res) => {
   try {
     const { id } = req.params;
-    const { manager_1_remarks, form_status } = req.body;
-
-    // Validate input
-    if (!form_status || !["approved", "rejected"].includes(form_status.toLowerCase())) {
-      return res.status(400).json({ message: "Invalid status value" });
-    }
+    const { manager_remarks, form_status } = req.body;
 
     const collections = [Appraisals, DFIForms, KPIForms];
-    let updatedDoc = null;
+    let doc = null;
 
     for (let Model of collections) {
-      updatedDoc = await Model.findByIdAndUpdate(
-        id,
-        {
-          manager_1_remarks,
-          form_status: form_status.toLowerCase(),
-        },
-        { new: true } 
-      );
+      doc = await Model.findById(id);
+      if (doc) {
 
-      if (updatedDoc) break; 
+        console.log("USER:", req.body.user);
+
+        // ❌ prevent duplicate approval
+        const alreadyReviewed = doc.manager_remarks.some(
+          (r) => r.manager_id.toString() === req.body.user.user_id.toString()
+        );
+
+        if (alreadyReviewed) {
+          return res.status(400).json({ message: "Already reviewed" });
+        }
+
+        // ✅ push remark
+        doc.manager_remarks.push({
+          manager_id: req.body.user.user_id,
+          manager_name: req.body.user.user_fullname,
+          remark: manager_remarks,
+          status: form_status,
+          date: new Date(),
+        });
+
+        // ❌ if ANY rejects → final reject
+        if (form_status === "rejected") {
+          doc.form_status = "rejected";
+        } else {
+          // ✅ count approvals
+          const approvedCount = doc.manager_remarks.filter(
+            (r) => r.status === "approved"
+          ).length;
+
+          // ✅ total approvers
+          const totalApprovers = doc.approvers.length;
+
+          // ✅ final decision
+          if (approvedCount === totalApprovers) {
+            doc.form_status = "approved";
+          } else {
+            doc.form_status = "pending";
+          }
+        }
+
+        await doc.save();
+        break;
+      }
     }
 
-    if (!updatedDoc) {
-      return res.status(404).json({ message: "Form not found in any collection" });
+    if (!doc) {
+      return res.status(404).json({ message: "Form not found" });
     }
 
-    return res.json({
-      message: `Form ${form_status} successfully`,
-      data: updatedDoc,
+    res.json({
+      message: "Action recorded",
+      data: doc,
     });
+
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: err.message });
   }
 };

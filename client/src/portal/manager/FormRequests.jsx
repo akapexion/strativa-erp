@@ -300,6 +300,13 @@ const FormRequests = () => {
                       className="hover:bg-slate-50 transition-colors group cursor-pointer"
                     >
                       {/* Employee */}
+
+                      <td className="px-7 py-4">
+                        <div className="flex items-center gap-3">
+                          {r.form_no}
+                        </div>
+                      </td>
+
                       <td className="px-7 py-4">
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-600 font-bold text-xs shrink-0">

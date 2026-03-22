@@ -26,16 +26,6 @@ export const raiseKPI = async (req, res) => {
       });
     }
 
-    // 🔹 Duplicate check (because of unique employee_code)
-    const existing = await KPIForms.findOne({ employee_code });
-
-    if (existing) {
-      return res.status(400).json({
-        success: false,
-        message: "KPI already submitted for this employee",
-      });
-    }
-
     // 🔹 Create
     const newKPI = new KPIForms({
       employee_code,

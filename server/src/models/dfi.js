@@ -31,18 +31,24 @@ const DFIModel = new mongoose.Schema({
         enum: ["pending", "approved", "rejected"],
       default: "pending"
     },
-    manager_1_remarks: {
-        type: String,
-        default: ""
-    },
-    manager_2_remarks: {
-        type: String,
-        default: ""
-    },
-    manager_3_remarks: {
-        type: String,
-        default: ""
-    }
+    manager_remarks: [
+        {
+          manager_id: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+          },
+          manager_name: String,
+          remark: String,
+          status: {
+            type: String,
+            enum: ["approved", "rejected"],
+          },
+          date: {
+            type: Date,
+            default: Date.now,
+          },
+        }
+      ]
 })
 
 const DFIForms = mongoose.model("DFIForm", DFIModel);

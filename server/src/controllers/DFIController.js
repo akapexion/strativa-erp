@@ -22,16 +22,6 @@ export const raiseDFI = async (req, res) => {
       });
     }
 
-    // 🔹 Check duplicate (because employee_code is unique)
-    const existingDFI = await DFIForms.findOne({ employee_code });
-
-    if (existingDFI) {
-      return res.status(400).json({
-        success: false,
-        message: "DFI already raised for this employee",
-      });
-    }
-
     // 🔹 Create new DFI
     const newDFI = new DFIForms({
       employee_code,

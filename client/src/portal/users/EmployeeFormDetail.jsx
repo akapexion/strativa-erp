@@ -89,7 +89,9 @@ const Card = ({ icon, title, accent = "text-blue-600", children }) => (
   <section className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
     <div className="px-7 py-4 border-b border-gray-100 flex items-center gap-2.5">
       <span className={accent}>{icon}</span>
-      <h2 className="font-bold text-slate-800 text-sm tracking-tight">{title}</h2>
+      <h2 className="font-bold text-slate-800 text-sm tracking-tight">
+        {title}
+      </h2>
     </div>
     <div className="px-7 py-6">{children}</div>
   </section>
@@ -128,7 +130,7 @@ const EmployeeFormDetail = () => {
       }
       const res = await axios.get(`${baseURL}/${id}`);
       setFormDetail(res.data.formSubmission || res.data);
-      setRemarks(res.data.formSubmission?.manager_1_remarks || "");
+      setRemarks(res.data.formSubmission?.manager_remarks || "");
     } catch (err) {
       console.error(err);
       setError(err.response?.data?.message || "Failed to load form details.");
@@ -149,8 +151,9 @@ const EmployeeFormDetail = () => {
       const type = getFormType(formDetail.form_title);
 
       await axios.put(`http://localhost:5000/manager/action/${type}/${id}`, {
-        manager_1_remarks: remarks,
-        form_status: status
+        manager_remarks: remarks,
+        form_status: status,
+        user,
       });
 
       gooeyToast.success(`Form ${status} successfully`);
@@ -160,6 +163,13 @@ const EmployeeFormDetail = () => {
       gooeyToast.error(err.response?.data?.message || "Something went wrong");
     }
   };
+
+  const managers = formDetail?.manager_remarks?.length
+    ? formDetail.manager_remarks
+    : [
+        { manager_name: "Manager 1", remark: "" },
+        { manager_name: "Manager 2", remark: "" },
+      ];
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -224,8 +234,12 @@ const EmployeeFormDetail = () => {
               className={`w-2.5 h-2.5 rounded-full shrink-0 ${statusConfig.dot}`}
             />
             <div className="flex-1">
-              <p className="text-sm font-bold text-slate-800">{statusConfig.label}</p>
-              <p className="text-xs text-slate-500 mt-0.5">{statusConfig.message}</p>
+              <p className="text-sm font-bold text-slate-800">
+                {statusConfig.label}
+              </p>
+              <p className="text-xs text-slate-500 mt-0.5">
+                {statusConfig.message}
+              </p>
             </div>
             <span
               className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold ${statusConfig.badge}`}
@@ -236,9 +250,17 @@ const EmployeeFormDetail = () => {
           </div>
 
           {/* Form Info */}
-          <Card icon={<FileText size={16} />} title="Form Information" accent="text-blue-600">
+          <Card
+            icon={<FileText size={16} />}
+            title="Form Information"
+            accent="text-blue-600"
+          >
             <div className="grid md:grid-cols-2 gap-x-10 gap-y-5">
-              <Field icon={<FileText size={13} />} label="Form Title" value={formDetail.form_title} />
+              <Field
+                icon={<FileText size={13} />}
+                label="Form Title"
+                value={formDetail.form_title}
+              />
               <Field
                 icon={<Tag size={13} />}
                 label="Category"
@@ -252,7 +274,9 @@ const EmployeeFormDetail = () => {
                 icon={<ShieldCheck size={13} />}
                 label="Submission Status"
                 value={
-                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold ${statusConfig.badge}`}>
+                  <span
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold ${statusConfig.badge}`}
+                  >
                     {statusConfig.icon}
                     {statusConfig.label}
                   </span>
@@ -262,19 +286,41 @@ const EmployeeFormDetail = () => {
           </Card>
 
           {/* Employee Info */}
-          <Card icon={<User size={16} />} title="Employee Information" accent="text-slate-600">
+          <Card
+            icon={<User size={16} />}
+            title="Employee Information"
+            accent="text-slate-600"
+          >
             <div className="grid md:grid-cols-2 gap-x-10 gap-y-5">
-              <Field icon={<User size={13} />} label="Full Name" value={formDetail.employee_name} />
-              <Field icon={<Hash size={13} />} label="Employee Code" value={formDetail.employee_code} mono />
+              <Field
+                icon={<User size={13} />}
+                label="Full Name"
+                value={formDetail.employee_name}
+              />
+              <Field
+                icon={<Hash size={13} />}
+                label="Employee Code"
+                value={formDetail.employee_code}
+                mono
+              />
             </div>
           </Card>
 
           {/* Form Specific Details */}
-          <Card icon={formTypeConfig.icon} title={formTypeConfig.detailLabel} accent="text-slate-600">
+          <Card
+            icon={formTypeConfig.icon}
+            title={formTypeConfig.detailLabel}
+            accent="text-slate-600"
+          >
             <div className="grid md:grid-cols-2 gap-x-10 gap-y-5">
               {formDetail.form_title === "Annual Appraisal" ? (
                 <>
-                  <Field icon={<Star size={13} />} label="Achievements" value={formDetail.appraisal_achievements} colSpan />
+                  <Field
+                    icon={<Star size={13} />}
+                    label="Achievements"
+                    value={formDetail.appraisal_achievements}
+                    colSpan
+                  />
                   <Field
                     icon={<CheckCircle2 size={13} />}
                     label="SEP Qualification"
@@ -282,12 +328,14 @@ const EmployeeFormDetail = () => {
                       formDetail.appraisal_sep_qualification ? (
                         <span
                           className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold ${
-                            formDetail.appraisal_sep_qualification?.toLowerCase() === "yes"
+                            formDetail.appraisal_sep_qualification?.toLowerCase() ===
+                            "yes"
                               ? "bg-emerald-50 border border-emerald-200 text-emerald-700"
                               : "bg-red-50 border border-red-200 text-red-600"
                           }`}
                         >
-                          {formDetail.appraisal_sep_qualification?.toLowerCase() === "yes" ? (
+                          {formDetail.appraisal_sep_qualification?.toLowerCase() ===
+                          "yes" ? (
                             <CheckCircle2 size={12} />
                           ) : (
                             <XCircle size={12} />
@@ -298,57 +346,140 @@ const EmployeeFormDetail = () => {
                     }
                   />
                 </>
-              ) : formDetail.form_title === "Direct Financial Incentive - DFI" ? (
+              ) : formDetail.form_title ===
+                "Direct Financial Incentive - DFI" ? (
                 <>
-                  <Field icon={<Hash size={13} />} label="Alternate Count" value={formDetail.dfi_alternate_count} mono />
+                  <Field
+                    icon={<Hash size={13} />}
+                    label="Alternate Count"
+                    value={formDetail.dfi_alternate_count}
+                    mono
+                  />
                   <Field
                     icon={<DollarSign size={13} />}
                     label="Incentive Amount"
-                    value={formDetail.dfi_amount ? `PKR ${Number(formDetail.dfi_amount).toLocaleString()}` : null}
+                    value={
+                      formDetail.dfi_amount
+                        ? `PKR ${Number(formDetail.dfi_amount).toLocaleString()}`
+                        : null
+                    }
                     mono
                   />
                 </>
               ) : (
                 <>
-                  <Field icon={<BarChart2 size={13} />} label="Batch" value={formDetail.kpi_batch} mono />
-                  <Field icon={<Hash size={13} />} label="Semester" value={formDetail.kpi_batch_semester} mono />
-                  <Field icon={<Hash size={13} />} label="DO Count" value={formDetail.kpi_do_count} mono />
-                  <Field icon={<Percent size={13} />} label="Attendance Percentage" value={formDetail.kpi_batch_attendence_percentage ? `${formDetail.kpi_batch_attendence_percentage}%` : null} mono />
+                  <Field
+                    icon={<BarChart2 size={13} />}
+                    label="Batch"
+                    value={formDetail.kpi_batch}
+                    mono
+                  />
+                  <Field
+                    icon={<Hash size={13} />}
+                    label="Semester"
+                    value={formDetail.kpi_batch_semester}
+                    mono
+                  />
+                  <Field
+                    icon={<Hash size={13} />}
+                    label="DO Count"
+                    value={formDetail.kpi_do_count}
+                    mono
+                  />
+                  <Field
+                    icon={<Percent size={13} />}
+                    label="Attendance Percentage"
+                    value={
+                      formDetail.kpi_batch_attendence_percentage
+                        ? `${formDetail.kpi_batch_attendence_percentage}%`
+                        : null
+                    }
+                    mono
+                  />
                 </>
               )}
             </div>
           </Card>
-          
-          {user.user_role === "manager" ? 
-          (
-          /* Manager Remarks & Approve/Reject */
-          <Card icon={formTypeConfig.icon} title="Remarks" accent="text-slate-600">
-            <textarea
-              value={remarks}
-              onChange={(e) => setRemarks(e.target.value)}
-              className="w-[100%] border border-gray-300 focus:border-blue-500 p-5 h-36 focus:outline-none"
-            />
-            <div className="flex justify-end gap-2 my-2">
-              <button
-                disabled={formDetail.form_status !== "pending"}
-                onClick={() => handleAction("approved")}
-                className="bg-green-600 text-white px-6 py-2 rounded disabled:opacity-50"
-              >
-                Approve
-              </button>
-              <button
-                disabled={formDetail.form_status !== "pending"}
-                onClick={() => handleAction("rejected")}
-                className="bg-red-600 text-white px-6 py-2 rounded disabled:opacity-50"
-              >
-                Reject
-              </button>
-            </div>
-          </Card>
-      )
-          :
-          null
-          }
+
+          {user.user_role === "manager" ? (
+            /* Manager Remarks & Approve/Reject */
+            <Card
+              icon={formTypeConfig.icon}
+              title="Remarks"
+              accent="text-slate-600"
+            >
+              <textarea
+                value={remarks}
+                onChange={(e) => setRemarks(e.target.value)}
+                className="w-[100%] border border-gray-300 focus:border-blue-500 p-5 h-36 focus:outline-none"
+              />
+              <div className="flex justify-end gap-2 my-2">
+                <button
+                  disabled={formDetail.form_status !== "pending"}
+                  onClick={() => handleAction("approved")}
+                  className="bg-green-600 text-white px-6 py-2 rounded disabled:opacity-50"
+                >
+                  Approve
+                </button>
+                <button
+                  disabled={formDetail.form_status !== "pending"}
+                  onClick={() => handleAction("rejected")}
+                  className="bg-red-600 text-white px-6 py-2 rounded disabled:opacity-50"
+                >
+                  Reject
+                </button>
+              </div>
+            </Card>
+          ) : user.user_role === "user" ? (
+            /* Manager Remarks */
+            <Card
+              icon={formTypeConfig.icon}
+              title="Remarks"
+              accent="text-slate-600"
+            >
+              <div className="relative">
+                {/* Vertical line */}
+                <div className="absolute left-3.5 top-2 bottom-2 w-px bg-slate-100" />
+
+                <div className="space-y-5">
+                  {managers.map((m, index) => (
+                    <div key={index} className="relative flex gap-4 pl-1">
+                      {/* Dot */}
+                      <div className="relative z-10 mt-1 w-6 h-6 rounded-full bg-slate-200 ring-4 ring-slate-50 flex items-center justify-center shrink-0">
+                        <div className="w-2 h-2 rounded-full bg-slate-400" />
+                      </div>
+
+                      {/* Content */}
+                      <div className="flex-1">
+                        <p className="text-sm font-bold text-slate-800">
+                          {m.manager_name}
+                        </p>
+                        <div className="mt-1.5 bg-slate-50 border border-gray-100 rounded-xl px-4 py-3">
+                          <p className="text-sm text-slate-700 leading-relaxed">
+                            {m.remark ? (
+                              m.remark
+                            ) : (
+                              <span className="text-slate-300 italic">
+                                No remarks yet
+                              </span>
+                            )}
+                          </p>
+                        </div>
+
+
+
+                        <div>
+                            {m.status}
+                        </div>
+
+
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </Card>
+          ) : null}
         </main>
       )}
     </div>
