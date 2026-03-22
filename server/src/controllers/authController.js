@@ -41,3 +41,15 @@ export const login = async (req, res) => {
       res.status(500).json({ success: false, message: "Server error" });
     }
   }
+
+
+export const allManagers = async(req, res) => {
+  try{
+    const allManagers = await Users.find({user_role: "manager"});
+
+    res.status(200).send({success: true, allManagers});
+  }
+  catch(err){
+    res.status(500).send({success: false, err});
+  }
+}

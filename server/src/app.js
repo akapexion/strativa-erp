@@ -21,12 +21,14 @@ app.use("/uploads", express.static("uploads"));
 connectDB();
 
 app.use("/auth", authRoute);
+app.use("/user", authRoute);
 app.use("/admin", employeeRoute);
 app.use("/user", employeeRoute);
 app.use("/user", appraisalRoute);
 app.use("/user", DFIRoute);
 app.use("/user", KPIRoute);
 app.use("/admin", leaveTypeRoute);
+app.use("/user", leaveTypeRoute);
 app.use("/manager", formRoute);
 app.use("/manager", employeeRoute);
 app.use("/profile", profileRoute);

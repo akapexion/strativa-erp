@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import {
   Bell,
   ChevronDown,
@@ -61,18 +61,29 @@ const Header = ({ userLoggedOut, userLogged }) => {
             </div>
 
             {userLogged.user_role === "user" ? (
+              <>
               <Link to="/hr360/user/employee-forms">
-                <button className="w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors group">
+                <button className="w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors group cursor-pointer">
                   <div className="p-2 bg-gray-100 rounded-lg group-hover:bg-blue-100 transition-colors">
                     <FileText size={18} />
                   </div>
                   <span className="font-bold text-sm">Easy Forms</span>
                 </button>
               </Link>
+
+              <Link to="/hr360/user/leaves" className="cursor-pointer">
+                  <button className="w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors group cursor-pointer">
+                    <div className="p-2 bg-gray-100 rounded-lg group-hover:bg-blue-100 transition-colors">
+                      <IdCardLanyard size={18} />
+                    </div>
+                    <span className="font-bold text-sm">Leaves</span>
+                  </button>
+                </Link>
+                </>
             ) : userLogged.user_role === "manager" ? (
               <>
-                <Link to="/hr360/admin/forms">
-                  <button className="w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors group">
+                <Link to="/hr360/admin/forms" className="cursor-pointer">
+                  <button className="w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors group cursor-pointer">
                     <div className="p-2 bg-gray-100 rounded-lg group-hover:bg-blue-100 transition-colors">
                       <FileText size={18} />
                     </div>
@@ -82,8 +93,8 @@ const Header = ({ userLoggedOut, userLogged }) => {
                   </button>
                 </Link>
 
-                <Link to="/hr360/admin/leave-types">
-                  <button className="w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors group">
+                <Link to="/hr360/admin/leave-types" className="cursor-pointer">
+                  <button className="w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors group cursor-pointer">
                     <div className="p-2 bg-gray-100 rounded-lg group-hover:bg-blue-100 transition-colors">
                       <Gift size={18} />
                     </div>
@@ -93,8 +104,8 @@ const Header = ({ userLoggedOut, userLogged }) => {
                   </button>
                 </Link>
 
-                <Link to="/hr360/admin/employees">
-                  <button className="w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors group">
+                <Link to="/hr360/admin/employees" className="cursor-pointer">
+                  <button className="w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors group cursor-pointer">
                     <div className="p-2 bg-gray-100 rounded-lg group-hover:bg-blue-100 transition-colors">
                       <IdCardLanyard size={18} />
                     </div>
@@ -104,8 +115,8 @@ const Header = ({ userLoggedOut, userLogged }) => {
               </>
             ) : (
               <>
-                <Link to="/hr360/admin/forms">
-                  <button className="w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors group">
+                <Link to="/hr360/admin/forms" className="cursor-pointer">
+                  <button className="w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors group cursor-pointer">
                     <div className="p-2 bg-gray-100 rounded-lg group-hover:bg-blue-100 transition-colors">
                       <FileText size={18} />
                     </div>
@@ -113,8 +124,8 @@ const Header = ({ userLoggedOut, userLogged }) => {
                   </button>
                 </Link>
 
-                <Link to="/hr360/admin/leave-types">
-                  <button className="w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors group">
+                <Link to="/hr360/admin/leave-types" className="cursor-pointer">
+                  <button className="w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors group cursor-pointer">
                     <div className="p-2 bg-gray-100 rounded-lg group-hover:bg-blue-100 transition-colors">
                       <Gift size={18} />
                     </div>
@@ -122,8 +133,8 @@ const Header = ({ userLoggedOut, userLogged }) => {
                   </button>
                 </Link>
 
-                <Link to="/hr360/admin/employees">
-                  <button className="w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors group">
+                <Link to="/hr360/admin/employees" className="cursor-pointer">
+                  <button className="w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors group cursor-pointer">
                     <div className="p-2 bg-gray-100 rounded-lg group-hover:bg-blue-100 transition-colors">
                       <IdCardLanyard size={18} />
                     </div>
@@ -138,7 +149,7 @@ const Header = ({ userLoggedOut, userLogged }) => {
 
       {/* Center: Logo */}
       <div className="flex items-center">
-        <Link to="/hr360">
+        <Link to="/hr360" className="cursor-pointer">
           <img
             src={LogoImage}
             width={140}
@@ -210,9 +221,9 @@ const Header = ({ userLoggedOut, userLogged }) => {
               <button className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-blue-600 transition-colors">
                 <UserCircle size={18} className="text-slate-400" />
                 {userLogged.user_role === "admin" ? (
-                  <Link to="/hr360/admin/profile">My Profile</Link>
+                  <Link to="/hr360/admin/profile" className="cursor-pointer">My Profile</Link>
                 ) : (
-                  <Link to="/hr360/user/profile">My Profile</Link>
+                  <Link to="/hr360/user/profile" className="cursor-pointer">My Profile</Link>
                 )}
               </button>
 
@@ -233,7 +244,7 @@ const Header = ({ userLoggedOut, userLogged }) => {
 
               <button
                 onClick={userLoggedOut}
-                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-bold text-red-500 hover:bg-red-50 transition-all group"
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-bold text-red-500 hover:bg-red-50 transition-all group cursor-pointer"
               >
                 <LogOut
                   size={18}

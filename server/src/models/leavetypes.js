@@ -12,6 +12,6 @@ const leaveTypesModel = new mongoose.Schema({
     
 })
 
-const LeaveTypes = mongoose.model("LeaveType", leaveTypesModel);
+const LeaveTypes = mongoose.models.LeaveType || mongoose.model("LeaveType", leaveTypesModel);
 
 export default LeaveTypes;

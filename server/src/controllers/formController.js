@@ -1,6 +1,7 @@
 import Appraisals from "../models/appraisals.js";
 import DFIForms from "../models/dfi.js";
 import KPIForms from "../models/kpi.js";
+import Users from "../models/users.js";
 
 export const allFormRequests = async (req, res) => {
   try {
@@ -47,40 +48,49 @@ export const managerAction = async (req, res) => {
       doc = await Model.findById(id);
       if (doc) {
 
-        console.log("USER:", req.body.user);
+        // ✅ If already finally approved or rejected — lock it
+        if (doc.form_status === "approved" || doc.form_status === "rejected") {
+          return res.status(400).json({
+            message: `Form is already ${doc.form_status}. No further actions allowed.`,
+          });
+        }
 
-        // ❌ prevent duplicate approval
+        // ✅ Prevent duplicate review by same manager
         const alreadyReviewed = doc.manager_remarks.some(
           (r) => r.manager_id.toString() === req.body.user.user_id.toString()
         );
 
         if (alreadyReviewed) {
-          return res.status(400).json({ message: "Already reviewed" });
+          return res.status(400).json({
+            message: "You have already submitted your review.",
+            alreadyReviewed: true,
+          });
         }
 
-        // ✅ push remark
+        // ✅ Push this manager's remark
         doc.manager_remarks.push({
           manager_id: req.body.user.user_id,
           manager_name: req.body.user.user_fullname,
+          manager_designation: req.body.user.user_designation,
           remark: manager_remarks,
           status: form_status,
           date: new Date(),
         });
 
-        // ❌ if ANY rejects → final reject
+        // ✅ If ANY manager rejects → immediately final reject, lock form
         if (form_status === "rejected") {
           doc.form_status = "rejected";
         } else {
-          // ✅ count approvals
+          // ✅ Count total approvals so far
           const approvedCount = doc.manager_remarks.filter(
             (r) => r.status === "approved"
           ).length;
 
-          // ✅ total approvers
-          const totalApprovers = doc.approvers.length;
+          // ✅ Total managers in system = 3 (hardcode or fetch dynamically)
+          const totalManagers = await Users.countDocuments({ user_role: "manager" });
 
-          // ✅ final decision
-          if (approvedCount === totalApprovers) {
+          // ✅ Only mark approved when ALL managers have approved
+          if (approvedCount === totalManagers) {
             doc.form_status = "approved";
           } else {
             doc.form_status = "pending";
@@ -96,10 +106,7 @@ export const managerAction = async (req, res) => {
       return res.status(404).json({ message: "Form not found" });
     }
 
-    res.json({
-      message: "Action recorded",
-      data: doc,
-    });
+    res.json({ message: "Action recorded", data: doc });
 
   } catch (err) {
     console.error(err);

@@ -38,6 +38,7 @@ const DFIModel = new mongoose.Schema({
             ref: "User",
           },
           manager_name: String,
+          manager_designation: { type: String, default: "" },
           remark: String,
           status: {
             type: String,
