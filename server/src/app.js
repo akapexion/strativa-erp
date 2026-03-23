@@ -9,6 +9,7 @@ import DFIRoute from "./routes/DFIRoutes.js";
 import KPIRoute from "./routes/KPIRoutes.js";
 import profileRoute from "./routes/profileRoutes.js";
 import formRoute from "./routes/formRoutes.js";
+import leaveRoute from "./routes/leaveRoutes.js";
 
 
 const app = express();
@@ -29,6 +30,7 @@ app.use("/user", DFIRoute);
 app.use("/user", KPIRoute);
 app.use("/admin", leaveTypeRoute);
 app.use("/user", leaveTypeRoute);
+app.use("/", leaveRoute);
 app.use("/manager", formRoute);
 app.use("/manager", employeeRoute);
 app.use("/profile", profileRoute);

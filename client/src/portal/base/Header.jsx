@@ -55,7 +55,7 @@ const Header = ({ userLoggedOut, userLogged }) => {
         </button>
 
         {isMenuOpen && (
-          <div className="absolute top-full left-0 mt-2 w-64 bg-white border border-gray-200 rounded-2xl shadow-2xl py-3 animate-in fade-in zoom-in duration-150 z-[9999]">
+          <div className="absolute top-full left-0 mt-2 w-72 bg-white border border-gray-200 rounded-2xl shadow-2xl py-3 animate-in fade-in zoom-in duration-150 z-[9999]">
             <div className="px-4 py-2 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
               Applications
             </div>
@@ -93,7 +93,7 @@ const Header = ({ userLoggedOut, userLogged }) => {
                   </button>
                 </Link>
 
-                <Link to="/hr360/admin/leave-types" className="cursor-pointer">
+                <Link to="/hr360/manager/leave-requests" className="cursor-pointer">
                   <button className="w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors group cursor-pointer">
                     <div className="p-2 bg-gray-100 rounded-lg group-hover:bg-blue-100 transition-colors">
                       <Gift size={18} />

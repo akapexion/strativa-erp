@@ -68,7 +68,36 @@ const employeesModel = new mongoose.Schema({
     is_manager: {
     type: Boolean,
     default: false,
+  },
+  alloted_leaves: {
+        causual_leaves: {
+          type: Number,
+          default: 0
+        },
+        medical_leaves: {
+          type: Number,
+          default: 5
+        },
+        special_leaves: {
+          type: Number,
+          default: 5
+        },
+        annual_leaves: {
+          type: Number,
+          default: 0
+        }
+},
+leave_requests: [
+  {
+    leave_type:   { type: String },   
+    leave_from:   { type: Date },
+    leave_to:     { type: Date },
+    leave_days:   { type: Number },
+    leave_reason: { type: String },
+    leave_status: { type: String, enum: ["pending", "approved", "rejected"], default: "pending" },
+    createdAt:    { type: Date, default: Date.now },
   }
+]
 })
 
 const Employees = mongoose.model("Employee", employeesModel);

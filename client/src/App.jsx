@@ -22,6 +22,8 @@ import Profile from "./portal/Profile";
 import ProfileChangePassword from "./portal/ProfileChangePassword";
 import EmployeeFormDetail from "./portal/users/EmployeeFormDetail";
 import FormRequests from "./portal/manager/FormRequests";
+import Leaves from "./portal/users/Leaves";
+import LeaveRequests from "./portal/manager/LeaveRequests";
 
 const App = () => {
   // Load user from localStorage to persist login on refresh
@@ -96,6 +98,7 @@ const App = () => {
             element={<Navigate to="employee-forms" replace />}
           />
           <Route path="employee-forms" element={<EmployeeForms />} />
+          <Route path="leaves" element={<Leaves />} />
           <Route path="form-submission/:id" element={<EmployeeFormDetail />} />
           <Route path="raise-appraisal" element={<RaiseAppraisal />} />
           <Route path="raise-dfi" element={<RaiseDFI />} />
@@ -122,6 +125,7 @@ const App = () => {
             element={<Navigate to="form-requests" replace />}
           />
           <Route path="form-requests" element={<FormRequests />} />
+          <Route path="leave-requests" element={<LeaveRequests />} />
           <Route path="form-requests/:id" element={<EmployeeFormDetail />} />
           <Route path="profile" element={<Profile />} />
           <Route path="profile-changepassword" element={<ProfileChangePassword />} />

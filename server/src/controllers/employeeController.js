@@ -38,7 +38,7 @@ export const addEmployee = async (req, res) => {
       user_code: employeeCode,
       user_designation: req.body.employee_designation,
       user_image: req.file ? req.file.filename : "",
-      user_role: req.body.is_manager ? "manager" : "user",
+      user_role: req.body.is_manager === "true" ? "manager" : "user",
       is_manager: req.body.is_manager
     });
 
