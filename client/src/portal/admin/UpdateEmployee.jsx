@@ -7,6 +7,79 @@ import {
   GraduationCap, Landmark, Banknote, CalendarDays
 } from 'lucide-react';
 import { gooeyToast } from 'goey-toast';
+import { z } from 'zod';
+
+// ─── Zod Schema ───────────────────────────────────────────────────────────────
+const updateEmployeeSchema = z.object({
+  employee_fname: z
+    .string()
+    .min(1, "First name is required")
+    .max(50, "First name must be under 50 characters"),
+
+  employee_lname: z
+    .string()
+    .min(1, "Last name is required")
+    .max(50, "Last name must be under 50 characters"),
+
+  employee_email: z
+    .string()
+    .min(1, "Email is required")
+    .email("Enter a valid email address"),
+
+  employee_phonenumber: z
+    .string()
+    .min(1, "Phone number is required")
+    .regex(/^\+?[0-9\s\-]{7,15}$/, "Enter a valid phone number"),
+
+  employee_cnicnumber: z
+    .coerce.string()
+    .min(1, "CNIC is required")
+    .regex(/^\d{5}\d{7}\d{1}$/, "CNIC format must be in proper format"),
+
+  employee_maritalstatus: z
+    .string()
+    .min(1, "Marital status is required"),
+
+  employee_dob: z
+    .string()
+    .min(1, "Date of birth is required")
+    .refine((val) => {
+      const dob = new Date(val);
+      const today = new Date();
+      const age = today.getFullYear() - dob.getFullYear();
+      return age >= 18;
+    }, "Employee must be at least 18 years old"),
+
+  employee_department: z
+    .string()
+    .min(1, "Department is required"),
+
+  employee_designation: z
+    .string()
+    .min(1, "Designation is required"),
+
+  employee_qualification: z
+    .string()
+    .min(1, "Qualification is required")
+    .max(100, "Qualification must be under 100 characters"),
+
+  employee_salary: z
+    .string()
+    .min(1, "Salary is required")
+    .refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
+      message: "Salary must be a positive number",
+    }),
+
+  employee_lastorganization: z
+    .string()
+    .max(100, "Organization name must be under 100 characters")
+    .optional(),
+
+  employee_joiningdate: z
+    .string()
+    .min(1, "Joining date is required"),
+});
+// ─────────────────────────────────────────────────────────────────────────────
 
 const UpdateEmployee = () => {
   const { id } = useParams();
@@ -14,6 +87,7 @@ const UpdateEmployee = () => {
   const [loading, setLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
   const [formData, setFormData] = useState({});
+  const [errors, setErrors] = useState({}); // ← new: holds field-level errors
 
   // Fetch specific employee data
   useEffect(() => {
@@ -26,10 +100,10 @@ const UpdateEmployee = () => {
       } catch (err) {
         console.error("Fetch error:", err);
         gooeyToast.error("Failed to fetch employee data", {
-      fillColor: "#FFF",
-      bounce: 0.45,
-      timing: { displayDuration: 2500 },
-    });
+          fillColor: "#FFF",
+          bounce: 0.45,
+          timing: { displayDuration: 2500 },
+        });
       } finally {
         setLoading(false);
       }
@@ -40,30 +114,53 @@ const UpdateEmployee = () => {
   // Handle Input Changes
   const handleChange = (e) => {
     const { name, value } = e.target;
+    // Clear the error for this field as the user types
+    setErrors((prev) => ({ ...prev, [name]: undefined }));
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   // Handle PUT Request
   const handleUpdateSubmit = async (e) => {
     e.preventDefault();
+
+    // ─── Zod Validation ─────────────────────────────────────────────────────
+    const result = updateEmployeeSchema.safeParse(formData);
+
+    if (!result.success) {
+      const fieldErrors = result.error.flatten().fieldErrors;
+      const firstErrors = Object.fromEntries(
+        Object.entries(fieldErrors).map(([key, msgs]) => [key, msgs[0]])
+      );
+      setErrors(firstErrors);
+      gooeyToast.error("Please correct the highlighted fields before submitting", {
+        fillColor: "#FFF",
+        bounce: 0.45,
+        timing: { displayDuration: 2500 },
+      });
+      return; // stop submission
+    }
+
+    setErrors({}); // clear errors on success
+    // ────────────────────────────────────────────────────────────────────────
+
     setIsUpdating(true);
     try {
       const { data } = await axios.put(`http://localhost:5000/admin/update-employee/${id}`, formData);
       if (data.success) {
         gooeyToast.success("Employee Updated Successfully", {
-              fillColor: "#FFF",
-              bounce: 0.45,
-              timing: { displayDuration: 2500 },
-            });
+          fillColor: "#FFF",
+          bounce: 0.45,
+          timing: { displayDuration: 2500 },
+        });
         navigate('/hr360/admin/employees');
       }
     } catch (err) {
       console.error("Update failed:", err);
-       gooeyToast.error("Error updating record. Please try again.", {
-              fillColor: "#FFF",
-              bounce: 0.45,
-              timing: { displayDuration: 2500 },
-            });
+      gooeyToast.error("Error updating record. Please try again.", {
+        fillColor: "#FFF",
+        bounce: 0.45,
+        timing: { displayDuration: 2500 },
+      });
     } finally {
       setIsUpdating(false);
     }
@@ -89,11 +186,11 @@ const UpdateEmployee = () => {
   return (
     <div className="min-h-screen bg-slate-50 p-6 md:p-10 font-sans">
       <div className="max-w-5xl mx-auto">
-        
+
         {/* Navigation & Title */}
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
-          <button 
-            onClick={() => navigate(-1)} 
+          <button
+            onClick={() => navigate(-1)}
             className="flex items-center gap-2 text-slate-500 hover:text-blue-600 transition-all font-bold w-fit"
           >
             <ArrowLeft size={20} /> Back to Directory
@@ -105,7 +202,7 @@ const UpdateEmployee = () => {
         </div>
 
         <form onSubmit={handleUpdateSubmit} className="space-y-8">
-          
+
           {/* PERSONAL DETAILS SECTION */}
           <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
             <div className="bg-slate-900 p-4 px-8 flex items-center gap-3 text-white">
@@ -114,26 +211,32 @@ const UpdateEmployee = () => {
             </div>
             <div className="p-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[
-                { label: "First Name", name: "employee_fname", icon: <User size={16}/> },
-                { label: "Last Name", name: "employee_lname", icon: <User size={16}/> },
-                { label: "Email Address", name: "employee_email", type: "email", icon: <Mail size={16}/> },
-                { label: "Phone Number", name: "employee_phonenumber", icon: <Phone size={16}/> },
-                { label: "CNIC Number", name: "employee_cnicnumber", icon: <Fingerprint size={16}/> },
-                { label: "Marital Status", name: "employee_maritalstatus", icon: <Milestone size={16}/> },
-                { label: "Date of Birth", name: "employee_dob", type: "date", icon: <CalendarDays size={16}/> },
+                { label: "First Name",      name: "employee_fname",         icon: <User size={16}/> },
+                { label: "Last Name",       name: "employee_lname",         icon: <User size={16}/> },
+                { label: "Email Address",   name: "employee_email",         type: "email", icon: <Mail size={16}/> },
+                { label: "Phone Number",    name: "employee_phonenumber",   icon: <Phone size={16}/> },
+                { label: "CNIC Number",     name: "employee_cnicnumber",    icon: <Fingerprint size={16}/> },
+                { label: "Marital Status",  name: "employee_maritalstatus", icon: <Milestone size={16}/> },
+                { label: "Date of Birth",   name: "employee_dob",           type: "date", icon: <CalendarDays size={16}/> },
               ].map((field) => (
                 <div key={field.name} className="flex flex-col">
                   <label className="text-[10px] font-black text-slate-400 uppercase mb-1 ml-1 tracking-wider flex items-center gap-1">
                     {field.icon} {field.label}
                   </label>
-                  <input 
+                  <input
                     type={field.type || "text"}
                     name={field.name}
                     value={field.type === "date" ? formatDateForInput(formData[field.name]) : (formData[field.name] || "")}
                     onChange={handleChange}
-                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all font-semibold text-slate-700"
-                    required
+                    className={`w-full p-3 bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:bg-white transition-all font-semibold text-slate-700 ${
+                      errors[field.name]
+                        ? "border-red-400 bg-red-50 focus:ring-red-400"
+                        : "border-slate-200 focus:ring-blue-500"
+                    }`}
                   />
+                  {errors[field.name] && (
+                    <p className="text-xs text-red-500 mt-1 ml-1">{errors[field.name]}</p>
+                  )}
                 </div>
               ))}
             </div>
@@ -147,25 +250,31 @@ const UpdateEmployee = () => {
             </div>
             <div className="p-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[
-                { label: "Department", name: "employee_department", icon: <Landmark size={16}/> },
-                { label: "Designation", name: "employee_designation", icon: <Briefcase size={16}/> },
-                { label: "Qualification", name: "employee_qualification", icon: <GraduationCap size={16}/> },
-                { label: "Salary Package", name: "employee_salary", icon: <Banknote size={16}/> },
-                { label: "Previous Org", name: "employee_lastorganization", icon: <Milestone size={16}/> },
-                { label: "Joining Date", name: "employee_joiningdate", type: "date", icon: <CalendarDays size={16}/> },
+                { label: "Department",   name: "employee_department",      icon: <Landmark size={16}/> },
+                { label: "Designation",  name: "employee_designation",     icon: <Briefcase size={16}/> },
+                { label: "Qualification",name: "employee_qualification",   icon: <GraduationCap size={16}/> },
+                { label: "Salary Package",name:"employee_salary",          icon: <Banknote size={16}/> },
+                { label: "Previous Org", name: "employee_lastorganization",icon: <Milestone size={16}/> },
+                { label: "Joining Date", name: "employee_joiningdate",     type: "date", icon: <CalendarDays size={16}/> },
               ].map((field) => (
                 <div key={field.name} className="flex flex-col">
                   <label className="text-[10px] font-black text-slate-400 uppercase mb-1 ml-1 tracking-wider flex items-center gap-1">
                     {field.icon} {field.label}
                   </label>
-                  <input 
+                  <input
                     type={field.type || "text"}
                     name={field.name}
                     value={field.type === "date" ? formatDateForInput(formData[field.name]) : (formData[field.name] || "")}
                     onChange={handleChange}
-                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all font-semibold text-slate-700"
-                    required
+                    className={`w-full p-3 bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:bg-white transition-all font-semibold text-slate-700 ${
+                      errors[field.name]
+                        ? "border-red-400 bg-red-50 focus:ring-red-400"
+                        : "border-slate-200 focus:ring-emerald-500"
+                    }`}
                   />
+                  {errors[field.name] && (
+                    <p className="text-xs text-red-500 mt-1 ml-1">{errors[field.name]}</p>
+                  )}
                 </div>
               ))}
             </div>
@@ -173,15 +282,15 @@ const UpdateEmployee = () => {
 
           {/* FOOTER ACTIONS */}
           <div className="flex flex-col md:flex-row items-center justify-end gap-4 border-t border-slate-200 pt-8 pb-12">
-            <button 
-              type="button" 
-              onClick={() => navigate(-1)} 
+            <button
+              type="button"
+              onClick={() => navigate(-1)}
               className="w-full md:w-auto px-10 py-4 rounded-2xl font-bold text-slate-500 hover:bg-slate-200 transition-all"
             >
               Discard Changes
             </button>
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               disabled={isUpdating}
               className={`w-full md:w-auto flex items-center justify-center gap-3 px-12 py-4 rounded-2xl font-bold shadow-xl transition-all active:scale-95 ${
                 isUpdating ? 'bg-slate-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-200'

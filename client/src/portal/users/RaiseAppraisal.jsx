@@ -10,6 +10,38 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { gooeyToast } from "goey-toast";
+import { z } from "zod";
+
+// ─── Zod Schema ───────────────────────────────────────────────────────────────
+const appraisalSchema = z.object({
+  joining_date: z
+    .string()
+    .min(1, "Joining date is required"),
+
+  lastincrement_date: z
+    .string()
+    .min(1, "Last increment date is required")
+    .refine((val) => {
+      return new Date(val) <= new Date();
+    }, "Last increment date cannot be in the future"),
+
+  achievements: z
+    .string()
+    .min(10, "Please describe your achievements (min 10 characters)")
+    .max(1000, "Achievements must be under 1000 characters"),
+
+  sep_qualification: z
+    .string()
+    .min(1, "Please select SEP qualification"),
+}).refine((data) => {
+  // Cross-field: lastincrement_date must be after joining_date
+  if (!data.joining_date || !data.lastincrement_date) return true;
+  return new Date(data.lastincrement_date) >= new Date(data.joining_date);
+}, {
+  message: "Last increment date cannot be before joining date",
+  path: ["lastincrement_date"],
+});
+// ─────────────────────────────────────────────────────────────────────────────
 
 const RaiseAppraisal = () => {
   const navigate = useNavigate();
@@ -19,7 +51,7 @@ const RaiseAppraisal = () => {
   const initialFormData = {
     employee_code: user?.user_code || "",
     employee_name: user?.user_fullname || "",
-    employee_image :user?.user_image || "",
+    employee_image: user?.user_image || "",
     joining_date: "",
     lastincrement_date: "",
     achievements: "",
@@ -27,8 +59,11 @@ const RaiseAppraisal = () => {
   };
 
   const [formData, setFormData] = useState(initialFormData);
+  const [errors, setErrors] = useState({}); // ← new: holds field-level errors
 
   const handleChange = (e) => {
+    // Clear the error for this field as the user types
+    setErrors((prev) => ({ ...prev, [e.target.name]: undefined }));
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
@@ -36,6 +71,26 @@ const RaiseAppraisal = () => {
   };
 
   const handleSubmit = async () => {
+    // ─── Zod Validation ───────────────────────────────────────────────────────
+    const result = appraisalSchema.safeParse(formData);
+
+    if (!result.success) {
+      const fieldErrors = result.error.flatten().fieldErrors;
+      const firstErrors = Object.fromEntries(
+        Object.entries(fieldErrors).map(([key, msgs]) => [key, msgs[0]])
+      );
+      setErrors(firstErrors);
+      gooeyToast.error("Please fix the errors before submitting.", {
+        fillColor: "#FFF",
+        bounce: 0.45,
+        timing: { displayDuration: 2500 },
+      });
+      return; // stop submission
+    }
+
+    setErrors({}); // clear errors on success
+    // ─────────────────────────────────────────────────────────────────────────
+
     try {
       const res = await axios.post(
         "http://localhost:5000/user/raise-appraisal",
@@ -49,6 +104,7 @@ const RaiseAppraisal = () => {
       });
 
       setFormData(initialFormData);
+      setErrors({});
     } catch (error) {
       console.error(error);
       gooeyToast.error(
@@ -97,13 +153,9 @@ const RaiseAppraisal = () => {
           </h1>
         </div>
         <div className="flex items-center gap-3">
-          <button
-            className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 transition-all"
-          >
+          <button className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 transition-all">
             <TrendingUp size={16} />
-            <Link to="/hr360/user/appraisals">
-            View Submissions
-            </Link>
+            <Link to="/hr360/user/appraisals">View Submissions</Link>
           </button>
           <button
             onClick={() => navigate(-1)}
@@ -131,11 +183,10 @@ const RaiseAppraisal = () => {
             <h2 className="font-bold text-slate-800">Employment Timeline</h2>
           </div>
           <div className="p-8 grid md:grid-cols-2 gap-6">
+
             {/* Joining Date */}
             <div className="space-y-2">
-              <label className="text-sm font-bold text-slate-700">
-                Joining Date
-              </label>
+              <label className="text-sm font-bold text-slate-700">Joining Date</label>
               <div className="relative">
                 <Calendar
                   className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
@@ -146,16 +197,19 @@ const RaiseAppraisal = () => {
                   name="joining_date"
                   value={formData.joining_date}
                   onChange={handleChange}
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                  className={`w-full pl-10 pr-4 py-2.5 rounded-xl border focus:ring-2 focus:ring-blue-500 outline-none transition-all ${
+                    errors.joining_date ? "border-red-400 bg-red-50" : "border-slate-200"
+                  }`}
                 />
               </div>
+              {errors.joining_date && (
+                <p className="text-xs text-red-500">{errors.joining_date}</p>
+              )}
             </div>
 
             {/* Last Increment Date */}
             <div className="space-y-2">
-              <label className="text-sm font-bold text-slate-700">
-                Last Increment Date
-              </label>
+              <label className="text-sm font-bold text-slate-700">Last Increment Date</label>
               <div className="relative">
                 <TrendingUp
                   className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
@@ -166,9 +220,14 @@ const RaiseAppraisal = () => {
                   name="lastincrement_date"
                   value={formData.lastincrement_date}
                   onChange={handleChange}
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                  className={`w-full pl-10 pr-4 py-2.5 rounded-xl border focus:ring-2 focus:ring-blue-500 outline-none transition-all ${
+                    errors.lastincrement_date ? "border-red-400 bg-red-50" : "border-slate-200"
+                  }`}
                 />
               </div>
+              {errors.lastincrement_date && (
+                <p className="text-xs text-red-500">{errors.lastincrement_date}</p>
+              )}
             </div>
 
             {/* Duration since last increment */}
@@ -179,9 +238,7 @@ const RaiseAppraisal = () => {
                   <span className="text-sm text-slate-600">
                     Duration since last increment:
                   </span>
-                  <span className="text-sm font-bold text-blue-600">
-                    {duration}
-                  </span>
+                  <span className="text-sm font-bold text-blue-600">{duration}</span>
                 </div>
               </div>
             )}
@@ -192,16 +249,13 @@ const RaiseAppraisal = () => {
         <section className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
           <div className="px-8 py-5 border-b border-slate-100 bg-slate-50/50 flex items-center gap-2 text-purple-600">
             <Star size={18} />
-            <h2 className="font-bold text-slate-800">
-              Performance &amp; Qualifications
-            </h2>
+            <h2 className="font-bold text-slate-800">Performance &amp; Qualifications</h2>
           </div>
           <div className="p-8 space-y-6">
+
             {/* Achievements */}
             <div className="space-y-2">
-              <label className="text-sm font-bold text-slate-700">
-                Achievements
-              </label>
+              <label className="text-sm font-bold text-slate-700">Achievements</label>
               <div className="relative">
                 <Star
                   className="absolute left-3 top-3.5 text-slate-400"
@@ -213,17 +267,20 @@ const RaiseAppraisal = () => {
                   onChange={handleChange}
                   rows={5}
                   placeholder="Describe key achievements, contributions, and milestones during this period..."
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all resize-none leading-relaxed"
+                  className={`w-full pl-10 pr-4 py-2.5 rounded-xl border focus:ring-2 focus:ring-blue-500 outline-none transition-all resize-none leading-relaxed ${
+                    errors.achievements ? "border-red-400 bg-red-50" : "border-slate-200"
+                  }`}
                 />
               </div>
+              {errors.achievements && (
+                <p className="text-xs text-red-500">{errors.achievements}</p>
+              )}
             </div>
 
             {/* SEP Qualification */}
             <div className="grid md:grid-cols-2 gap-6 items-start">
               <div className="space-y-2">
-                <label className="text-sm font-bold text-slate-700">
-                  SEP Qualification
-                </label>
+                <label className="text-sm font-bold text-slate-700">SEP Qualification</label>
                 <div className="relative">
                   <BadgeCheck
                     className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
@@ -233,29 +290,30 @@ const RaiseAppraisal = () => {
                     name="sep_qualification"
                     value={formData.sep_qualification}
                     onChange={handleChange}
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none bg-white cursor-pointer appearance-none"
+                    className={`w-full pl-10 pr-4 py-2.5 rounded-xl border focus:ring-2 focus:ring-blue-500 outline-none bg-white cursor-pointer appearance-none ${
+                      errors.sep_qualification ? "border-red-400 bg-red-50" : "border-slate-200"
+                    }`}
                   >
                     <option value="">Select Qualification</option>
                     <option value="Yes">Yes</option>
                     <option value="No">No</option>
                   </select>
                 </div>
+                {errors.sep_qualification && (
+                  <p className="text-xs text-red-500">{errors.sep_qualification}</p>
+                )}
 
                 {/* Qualification Badge */}
                 {formData.sep_qualification === "yes" && (
                   <div className="flex items-center gap-2 px-3 py-2 bg-emerald-50 border border-emerald-100 rounded-xl">
                     <BadgeCheck size={15} className="text-emerald-500" />
-                    <span className="text-sm font-bold text-emerald-600">
-                      Qualified
-                    </span>
+                    <span className="text-sm font-bold text-emerald-600">Qualified</span>
                   </div>
                 )}
                 {formData.sep_qualification === "no" && (
                   <div className="flex items-center gap-2 px-3 py-2 bg-red-50 border border-red-100 rounded-xl">
                     <BadgeCheck size={15} className="text-red-400" />
-                    <span className="text-sm font-bold text-red-500">
-                      Not Qualified
-                    </span>
+                    <span className="text-sm font-bold text-red-500">Not Qualified</span>
                   </div>
                 )}
               </div>
