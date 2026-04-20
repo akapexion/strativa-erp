@@ -13,6 +13,12 @@ export const addEmployee = async (req, res) => {
     const lname = req.body.employee_lname || "";
     const employeeCode = generateEmployeeCode(fname, lname);
 
+    const isManager = req.body.is_manager === "true" || req.body.is_manager === true;
+    const initialStatus = isManager ? "permanent" : "probation";
+    const initialLeaves = isManager 
+      ? { causual_leaves: 10, medical_leaves: 5, special_leaves: 5, annual_leaves: 14 }
+      : { causual_leaves: 0, medical_leaves: 5, special_leaves: 5, annual_leaves: 0 };
+
     const newEmployee = new Employees({
       employee_code: employeeCode,
       employee_fname: req.body.employee_fname,
@@ -29,7 +35,9 @@ export const addEmployee = async (req, res) => {
       employee_salary: req.body.employee_salary,
       employee_joiningdate: req.body.employee_joiningdate,
       employee_image: req.file ? req.file.filename : "",
-      is_manager: req.body.is_manager
+      is_manager: req.body.is_manager,
+      employment_status: initialStatus,
+      alloted_leaves: initialLeaves
     });
 
     const newUser = new Users({
@@ -86,7 +94,24 @@ export const fetchSingleEmployee = async (req, res) => {
 
 export const updateEmployee = async(req, res) => {
    try {
-    const updatedEmployee = await Employees.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const employee = await Employees.findById(req.params.id);
+    if (!employee) {
+      return res.status(404).json({ success: false, message: "Employee not found" });
+    }
+
+    let updateData = { ...req.body };
+
+    // Allot leaves if status is changed from probation to permanent
+    if (updateData.employment_status === 'permanent' && employee.employment_status === 'probation') {
+      updateData.alloted_leaves = {
+        causual_leaves: 10,
+        medical_leaves: 5,
+        special_leaves: 5,
+        annual_leaves: 14
+      };
+    }
+
+    const updatedEmployee = await Employees.findByIdAndUpdate(req.params.id, updateData, { new: true });
     res.status(200).json({ success: true, message: "Employee updated", updatedEmployee });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });

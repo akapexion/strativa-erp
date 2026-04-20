@@ -69,6 +69,11 @@ const employeesModel = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  employment_status: {
+    type: String,
+    enum: ["probation", "permanent"],
+    default: "probation"
+  },
   alloted_leaves: {
         causual_leaves: {
           type: Number,

@@ -78,6 +78,10 @@ const updateEmployeeSchema = z.object({
   employee_joiningdate: z
     .string()
     .min(1, "Joining date is required"),
+
+  employment_status: z
+    .enum(["probation", "permanent"])
+    .optional(),
 });
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -184,7 +188,7 @@ const UpdateEmployee = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 p-6 md:p-10 font-sans">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-emerald-50/30 p-6 md:p-10 font-sans">
       <div className="max-w-5xl mx-auto">
 
         {/* Navigation & Title */}
@@ -256,22 +260,40 @@ const UpdateEmployee = () => {
                 { label: "Salary Package",name:"employee_salary",          icon: <Banknote size={16}/> },
                 { label: "Previous Org", name: "employee_lastorganization",icon: <Milestone size={16}/> },
                 { label: "Joining Date", name: "employee_joiningdate",     type: "date", icon: <CalendarDays size={16}/> },
+                { label: "Status",       name: "employment_status",        type: "select", options: ["probation", "permanent"], icon: <Briefcase size={16}/> },
               ].map((field) => (
                 <div key={field.name} className="flex flex-col">
                   <label className="text-[10px] font-black text-slate-400 uppercase mb-1 ml-1 tracking-wider flex items-center gap-1">
                     {field.icon} {field.label}
                   </label>
-                  <input
-                    type={field.type || "text"}
-                    name={field.name}
-                    value={field.type === "date" ? formatDateForInput(formData[field.name]) : (formData[field.name] || "")}
-                    onChange={handleChange}
-                    className={`w-full p-3 bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:bg-white transition-all font-semibold text-slate-700 ${
-                      errors[field.name]
-                        ? "border-red-400 bg-red-50 focus:ring-red-400"
-                        : "border-slate-200 focus:ring-emerald-500"
-                    }`}
-                  />
+                  {field.type === "select" ? (
+                    <select
+                      name={field.name}
+                      value={formData[field.name] || "probation"}
+                      onChange={handleChange}
+                      className={`w-full p-3 bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:bg-white transition-all font-semibold text-slate-700 capitalize ${
+                        errors[field.name]
+                          ? "border-red-400 bg-red-50 focus:ring-red-400"
+                          : "border-slate-200 focus:ring-emerald-500"
+                      }`}
+                    >
+                      {field.options.map(opt => (
+                        <option key={opt} value={opt}>{opt}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      type={field.type || "text"}
+                      name={field.name}
+                      value={field.type === "date" ? formatDateForInput(formData[field.name]) : (formData[field.name] || "")}
+                      onChange={handleChange}
+                      className={`w-full p-3 bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:bg-white transition-all font-semibold text-slate-700 ${
+                        errors[field.name]
+                          ? "border-red-400 bg-red-50 focus:ring-red-400"
+                          : "border-slate-200 focus:ring-emerald-500"
+                      }`}
+                    />
+                  )}
                   {errors[field.name] && (
                     <p className="text-xs text-red-500 mt-1 ml-1">{errors[field.name]}</p>
                   )}

@@ -10,6 +10,8 @@ import {
   Calendar,
   Edit2,
   Trash2,
+  Download,
+  Filter
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { gooeyToast } from 'goey-toast';
@@ -18,6 +20,7 @@ const Employees = () => {
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
   const navigate = useNavigate();
 
   const fetchEmployees = async () => {
@@ -54,15 +57,35 @@ const Employees = () => {
   };
 
   const filteredEmployees = employees.filter(
-    (emp) =>
-      `${emp.employee_fname} ${emp.employee_lname}`
+    (emp) => {
+      const matchesSearch = `${emp.employee_fname} ${emp.employee_lname}`
         .toLowerCase()
         .includes(searchTerm.toLowerCase()) ||
-      emp.employee_code.toLowerCase().includes(searchTerm.toLowerCase())
+        emp.employee_code.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchesStatus = statusFilter === "all" || (emp.employment_status || "probation") === statusFilter;
+      
+      return matchesSearch && matchesStatus;
+    }
   );
 
+  const handleExportCSV = () => {
+    const headers = ["Code,First Name,Last Name,Email,Phone,Department,Designation,Status,Joining Date"];
+    const csvData = filteredEmployees.map(emp => {
+      return `${emp.employee_code},${emp.employee_fname},${emp.employee_lname},${emp.employee_email},${emp.employee_phonenumber},${emp.employee_department},${emp.employee_designation},${emp.employment_status || 'probation'},${new Date(emp.employee_joiningdate).toLocaleDateString()}`;
+    });
+    
+    const blob = new Blob([headers.concat(csvData).join("\n")], { type: 'text/csv;charset=utf-8;' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = "employees_directory.csv";
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
   return (
-    <div className="min-h-screen bg-slate-50 p-6 md:p-10 font-sans text-slate-900">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30 p-6 md:p-10 font-sans text-slate-900">
       <div className="max-w-7xl mx-auto">
         
         {/* Header Section */}
@@ -82,18 +105,38 @@ const Employees = () => {
         </div>
 
         {/* Search & Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div className="md:col-span-3 relative">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 mb-6">
+          <div className="md:col-span-5 relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
             <input
               type="text"
-              placeholder="Search by name, code or department..."
+              placeholder="Search by name, code..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none shadow-sm"
+              className="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none shadow-sm transition-all"
             />
           </div>
-          <div className="bg-white px-6 py-3 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+          <div className="md:col-span-3 relative">
+            <Filter className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none shadow-sm appearance-none capitalize transition-all"
+            >
+              <option value="all">All Statuses</option>
+              <option value="probation">Probation</option>
+              <option value="permanent">Permanent</option>
+            </select>
+          </div>
+          <div className="md:col-span-2">
+            <button
+              onClick={handleExportCSV}
+              className="w-full h-full flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-900 text-white px-4 py-3 rounded-xl font-bold shadow-sm transition-all active:scale-95"
+            >
+              <Download size={18} /> Export CSV
+            </button>
+          </div>
+          <div className="md:col-span-2 bg-white px-6 py-3 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between transition-all hover:shadow-md">
             <span className="text-slate-500 font-medium">Total:</span>
             <span className="text-2xl font-bold text-blue-600">{filteredEmployees.length}</span>
           </div>
@@ -133,17 +176,26 @@ const Employees = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 font-semibold text-slate-700">
-                      <div className="flex items-center gap-2"><Briefcase size={14} /> {emp.employee_designation}</div>
-                      <div className="text-xs text-slate-400 font-normal">{emp.employee_department}</div>
+                      <div className="flex items-center gap-2"><Briefcase size={14} className="text-blue-500"/> {emp.employee_designation}</div>
+                      <div className="text-xs text-slate-400 font-normal mt-1">{emp.employee_department}</div>
+                      <div className="mt-2">
+                        <span className={`px-2 py-1 text-[10px] uppercase tracking-wider font-bold rounded-md ${
+                          (emp.employment_status || "probation") === "permanent" 
+                            ? "bg-emerald-100 text-emerald-700 border border-emerald-200" 
+                            : "bg-amber-100 text-amber-700 border border-amber-200"
+                        }`}>
+                          {emp.employment_status || "probation"}
+                        </span>
+                      </div>
                     </td>
                     <td className="px-6 py-4 text-sm text-slate-600">
-                      <div>{emp.employee_email}</div>
-                      <div className="text-xs text-slate-400">{emp.employee_phonenumber}</div>
+                      <div className="flex items-center gap-2 mb-1"><Mail size={14} className="text-slate-400"/> {emp.employee_email}</div>
+                      <div className="flex items-center gap-2 text-xs text-slate-500"><Phone size={14} className="text-slate-400"/> {emp.employee_phonenumber}</div>
                     </td>
                     <td className="px-6 py-4 text-sm text-slate-600">
-                      <div className="flex items-center gap-2">
-                        <Calendar size={14} className="text-slate-400" />
-                        {new Date(emp.employee_joiningdate).toLocaleDateString()}
+                      <div className="flex items-center gap-2 bg-slate-50 w-fit px-3 py-1.5 rounded-lg border border-slate-100">
+                        <Calendar size={14} className="text-blue-500" />
+                        <span className="font-medium text-slate-700">{new Date(emp.employee_joiningdate).toLocaleDateString()}</span>
                       </div>
                     </td>
                     <td className="px-6 py-4">
