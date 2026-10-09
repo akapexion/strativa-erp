@@ -17,10 +17,10 @@ const Footer = () => {
 
   const footerLinks = {
     Product: [
-      { name: "Employee Dashboard", path: "/modules#employee-management" },
-      { name: "Appraisal Management", path: "/modules#appraisal-management" },
-      { name: "Leave Management", path: "/modules#leave-management" },
-      { name: "HR Analytics", path: "/modules#hr-analytics" }
+      { name: "Employee Dashboard", path: "/modules" },
+      { name: "Appraisal Management", path: "/modules" },
+      { name: "Leave Management", path: "/modules" },
+      { name: "HR Analytics", path: "/modules" }
     ],
     Company: [
       { name: "About the Platform", path: "/about-us" },

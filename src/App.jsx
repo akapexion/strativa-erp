@@ -82,11 +82,11 @@ const App = () => {
           <Route path="support-center" element={<SupportCenter />} />
           <Route path="privacy-policy" element={<PrivacyPolicy />} />
           <Route path="terms-of-service" element={<TermsOfService />} />
-          {/* Module alias routes for direct footer paths */}
-          <Route path="employee-dashboard" element={<Navigate to="/modules#employee-management" replace />} />
-          <Route path="appraisal-management" element={<Navigate to="/modules#appraisal-management" replace />} />
-          <Route path="leave-management" element={<Navigate to="/modules#leave-management" replace />} />
-          <Route path="hr-analytics" element={<Navigate to="/modules#hr-analytics" replace />} />
+          {/* Module alias routes - redirect cleanly to /modules */}
+          <Route path="employee-dashboard" element={<Navigate to="/modules" replace />} />
+          <Route path="appraisal-management" element={<Navigate to="/modules" replace />} />
+          <Route path="leave-management" element={<Navigate to="/modules" replace />} />
+          <Route path="hr-analytics" element={<Navigate to="/modules" replace />} />
         </Route>
 
         {/* Redirect for /hr360 base */}

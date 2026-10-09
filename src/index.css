@@ -2,6 +2,9 @@
 
 @import "tailwindcss";
 
+/* Enable class-based dark mode for any .dark ancestor */
+@custom-variant dark (&:is(.dark, .dark *));
+
 * {
-      font-family: "Poppins", sans-serif;
-}
+  font-family: "Poppins", sans-serif;
+}
