@@ -155,6 +155,20 @@ const DashboardMockup = () => (
 
 /* ─── Main Hero ─────────────────────────────────────────────── */
 const Hero = () => {
+  const user = (() => {
+    try {
+      const raw = localStorage.getItem("user");
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  })();
+  const destination = !user
+    ? "/login"
+    : user.user_role === 0
+    ? "/hr360/admin"
+    : "/hr360/user";
+
   return (
     <section
       className="relative w-full overflow-hidden"
@@ -196,23 +210,20 @@ const Hero = () => {
           {/* ── Left ── */}
           <div className="relative z-10 space-y-8">
 
-            {/* Eyebrow badge */}
-            <div
-              className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full text-sm font-bold text-blue-700"
-              style={{
-                background: 'rgba(37,99,235,0.08)',
-                border: '1px solid rgba(37,99,235,0.2)',
-                boxShadow: '0 2px 12px rgba(37,99,235,0.1)',
-              }}
-            >
-              <Zap size={14} className="text-blue-500" fill="currentColor" />
-              <span>Workforce Intelligence Platform</span>
-              <span
-                className="ml-1 px-2 py-0.5 rounded-full text-xs font-black text-white"
-                style={{ background: 'linear-gradient(90deg, #2563EB, #7C3AED)' }}
+            {/* Eyebrow badge & Apexion Representation */}
+            <div className="flex flex-wrap items-center gap-2.5">
+              <div
+                className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold text-indigo-700 bg-indigo-50/90 border border-indigo-200/80 shadow-2xs"
               >
-                NEW
-              </span>
+                <span className="w-2 h-2 rounded-full bg-indigo-600 animate-pulse" />
+                <span>Presented by <strong className="font-black text-indigo-950">Apexion</strong></span>
+              </div>
+              <div
+                className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold text-blue-700 bg-blue-50/90 border border-blue-200/80 shadow-2xs"
+              >
+                <Zap size={13} className="text-blue-500" fill="currentColor" />
+                <span>Workforce Intelligence Platform</span>
+              </div>
             </div>
 
             {/* Heading */}
@@ -255,29 +266,23 @@ const Hero = () => {
             </p>
 
             {/* CTAs */}
-            <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex flex-col sm:flex-row gap-3 pt-2">
               <Link
-                to="/hr360"
-                className="group flex items-center justify-center gap-2.5 px-7 py-4 rounded-2xl font-black text-white text-sm transition-all duration-200 hover:-translate-y-0.5"
+                to={destination}
+                className="group inline-flex items-center justify-center gap-2.5 px-7 py-3.5 rounded-xl font-bold text-white text-sm transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] shadow-md hover:shadow-xl hover:shadow-blue-600/30 cursor-pointer"
                 style={{
                   background: 'linear-gradient(135deg, #1D4ED8 0%, #4338CA 100%)',
-                  boxShadow: '0 8px 24px rgba(29,78,216,0.35), 0 2px 4px rgba(29,78,216,0.2)',
                 }}
               >
-                Sign In to Strativa
+                <span>{user ? "Go to Dashboard" : "Sign In to Strativa"}</span>
                 <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
               </Link>
-              <button
-                className="flex items-center justify-center gap-2 px-7 py-4 rounded-2xl font-bold text-slate-700 text-sm transition-all duration-200 hover:bg-slate-100 hover:-translate-y-0.5"
-                style={{
-                  background: 'rgba(255,255,255,0.9)',
-                  border: '1px solid rgba(226,232,240,0.8)',
-                  boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
-                  backdropFilter: 'blur(8px)',
-                }}
+              <Link
+                to="/modules"
+                className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl font-bold text-slate-700 hover:text-blue-700 text-sm transition-all duration-200 bg-white/90 hover:bg-white border border-slate-200 hover:border-blue-300 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] shadow-xs hover:shadow-md backdrop-blur-sm cursor-pointer"
               >
-                Explore Features
-              </button>
+                Explore Modules
+              </Link>
             </div>
 
             {/* Stats */}

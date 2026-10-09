@@ -1,9 +1,24 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { CheckCircle2, TrendingUp, Users2, Globe2, ArrowUpRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const AboutSection = () => {
   const [visible, setVisible] = useState(false);
   const sectionRef = useRef(null);
+
+  const user = (() => {
+    try {
+      const raw = localStorage.getItem("user");
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  })();
+  const destination = !user
+    ? "/login"
+    : user.user_role === 0
+    ? "/hr360/admin"
+    : "/hr360/user";
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -98,13 +113,16 @@ const AboutSection = () => {
             </ul>
 
             {/* CTA */}
-            <button className="group inline-flex items-center gap-2 text-sm font-semibold text-slate-900 hover:text-blue-600 transition-colors duration-200">
-              Learn more about our platform
+            <Link
+              to="/about-us"
+              className="group inline-flex items-center gap-2 text-sm font-bold text-slate-900 hover:text-blue-600 transition-colors duration-200 cursor-pointer"
+            >
+              <span>Learn more about our platform</span>
               <ArrowUpRight
                 size={15}
                 className="text-blue-600 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
               />
-            </button>
+            </Link>
           </div>
 
           {/* ── RIGHT ── */}
@@ -170,10 +188,13 @@ const AboutSection = () => {
                   </p>
                 </div>
 
-                <button className="self-start mt-4 inline-flex items-center gap-1.5 bg-white text-blue-700 text-xs font-semibold px-4 py-2 rounded-lg hover:bg-blue-50 transition-colors duration-200 shadow-md">
-                  Get started
+                <Link
+                  to={destination}
+                  className="self-start mt-4 inline-flex items-center gap-1.5 bg-white text-blue-700 text-xs font-bold px-4 py-2.5 rounded-xl hover:bg-blue-50 active:scale-[0.98] transition-all duration-200 shadow-md cursor-pointer"
+                >
+                  <span>Get started</span>
                   <ArrowUpRight size={13} />
-                </button>
+                </Link>
               </div>
 
             </div>

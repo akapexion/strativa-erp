@@ -1,6 +1,16 @@
 import React, { useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import LandingScreen from "./pages/LandingScreen";
+import AboutUs from "./pages/AboutUs";
+import Modules from "./pages/Modules";
+import ContactUs from "./pages/ContactUs";
+import OurTeam from "./pages/OurTeam";
+import CorporateSolutions from "./pages/CorporateSolutions";
+import UserGuide from "./pages/UserGuide";
+import SupportCenter from "./pages/SupportCenter";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
+import ScrollToTop from "./components/ScrollToTop";
 import AppLayout from "./AppLayout";
 import Layout from "./portal/Layout";
 import EmployeeForms from "./portal/users/EmployeeForms";
@@ -56,11 +66,45 @@ const App = () => {
 
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <Routes>
         {/* Public Routes */}
-        <Route path="/" element={<AppLayout userLogged = {userLogged} />}>
-          <Route path="/" element={<LandingScreen />} />
+        <Route path="/" element={<AppLayout userLogged={userLogged} />}>
+          <Route index element={<LandingScreen />} />
+          <Route path="about-us" element={<AboutUs userLogged={userLogged} />} />
+          <Route path="about-the-platform" element={<Navigate to="/about-us" replace />} />
+          <Route path="modules" element={<Modules userLogged={userLogged} />} />
+          <Route path="contact-us" element={<ContactUs />} />
+          <Route path="contact-hr" element={<Navigate to="/contact-us" replace />} />
+          <Route path="our-team" element={<OurTeam userLogged={userLogged} />} />
+          <Route path="corporate-solutions" element={<CorporateSolutions userLogged={userLogged} />} />
+          <Route path="user-guide" element={<UserGuide userLogged={userLogged} />} />
+          <Route path="support-center" element={<SupportCenter />} />
+          <Route path="privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="terms-of-service" element={<TermsOfService />} />
+          {/* Module alias routes for direct footer paths */}
+          <Route path="employee-dashboard" element={<Navigate to="/modules#employee-management" replace />} />
+          <Route path="appraisal-management" element={<Navigate to="/modules#appraisal-management" replace />} />
+          <Route path="leave-management" element={<Navigate to="/modules#leave-management" replace />} />
+          <Route path="hr-analytics" element={<Navigate to="/modules#hr-analytics" replace />} />
         </Route>
+
+        {/* Redirect for /hr360 base */}
+        <Route
+          path="/hr360"
+          element={
+            <Navigate
+              to={
+                !userLogged
+                  ? "/login"
+                  : userLogged.user_role === 0
+                  ? "/hr360/admin"
+                  : "/hr360/user"
+              }
+              replace
+            />
+          }
+        />
 
         {/* Login */}
         <Route path="/login" element={<Login userLoggedIn={userLoggedIn} />} />

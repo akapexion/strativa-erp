@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { BarChart2, Users, Package, ShieldCheck, Globe, Cpu } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const modules = [
   {
+    id: "hr-analytics",
     title: "Employee Analytics",
     description: "Gain real-time insights into employee performance, department productivity, and workforce trends through interactive charts and reports.",
     icon: BarChart2,
@@ -11,6 +13,7 @@ const modules = [
     number: "01",
   },
   {
+    id: "employee-management",
     title: "Employee Management",
     description: "Centralize employee profiles, roles, departments, and records in one secure platform for efficient workforce management.",
     icon: Users,
@@ -19,6 +22,7 @@ const modules = [
     number: "02",
   },
   {
+    id: "leave-management",
     title: "Leave Management",
     description: "Streamline leave requests, approvals, and allocations while maintaining transparent leave balances for every employee.",
     icon: Package,
@@ -27,7 +31,8 @@ const modules = [
     number: "03",
   },
   {
-    title: "Enterprise Security",
+    id: "payroll-payslip",
+    title: "Enterprise Security & Payroll",
     description: "Protect sensitive employee information with role-based access control and secure enterprise-grade data protection.",
     icon: ShieldCheck,
     accent: "#059669",
@@ -35,14 +40,16 @@ const modules = [
     number: "04",
   },
   {
-    title: "Employee Engagement",
-    description: "Automatically track birthdays, anniversaries, and important milestones to build a stronger and more connected workplace culture.",
+    id: "custom-forms",
+    title: "Dynamic HR Forms",
+    description: "Create and route tailored organizational forms with dynamic fields, file attachments, and manager actions.",
     icon: Globe,
     accent: "#0891B2",
-    tag: "Culture",
+    tag: "Forms",
     number: "05",
   },
   {
+    id: "appraisal-management",
     title: "Appraisal Automation",
     description: "Simplify performance reviews with structured appraisal forms, automated workflows, and transparent evaluation tracking.",
     icon: Cpu,
@@ -57,8 +64,9 @@ const FeatureCard = ({ module, index }) => {
   const Icon = module.icon;
 
   return (
-    <div
-      className="relative group cursor-pointer"
+    <Link
+      to={`/modules#${module.id}`}
+      className="relative group cursor-pointer block h-full text-inherit no-underline"
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{ animationDelay: `${index * 80}ms` }}
@@ -173,11 +181,25 @@ const FeatureCard = ({ module, index }) => {
           </div>
         </div>
       </div>
-    </div>
+    </Link>
   );
 };
 
 const Features = () => {
+  const user = (() => {
+    try {
+      const raw = localStorage.getItem("user");
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  })();
+  const destination = !user
+    ? "/login"
+    : user.user_role === 0
+    ? "/hr360/admin"
+    : "/hr360/user";
+
   return (
     <section
       className="relative py-28 overflow-hidden"
@@ -283,23 +305,25 @@ const Features = () => {
             </p>
             <h3
               className="text-2xl md:text-3xl font-black text-white"
-              style={{ fontFamily: "'Georgia', serif", letterSpacing: '-0.02em' }}
+              style={{ letterSpacing: '-0.02em' }}
             >
-              Start your free trial today.
+              Start using Strativa today.
             </h3>
           </div>
-          <div className="flex gap-3 shrink-0">
-            <button
-              className="px-6 py-3 rounded-xl text-sm font-bold text-slate-800 bg-white hover:bg-blue-50 transition-all duration-200 hover:shadow-lg"
+          <div className="flex flex-wrap sm:flex-nowrap gap-3 shrink-0">
+            <Link
+              to="/modules"
+              className="inline-flex items-center justify-center px-6 py-3 rounded-xl text-sm font-bold text-slate-800 bg-white hover:bg-blue-50 active:scale-[0.98] transition-all duration-200 hover:shadow-lg cursor-pointer"
             >
-              View demo
-            </button>
-            <button
-              className="px-6 py-3 rounded-xl text-sm font-bold text-white transition-all duration-200 hover:opacity-90 hover:shadow-lg"
+              Explore Modules
+            </Link>
+            <Link
+              to={destination}
+              className="inline-flex items-center justify-center px-6 py-3 rounded-xl text-sm font-bold text-white active:scale-[0.98] transition-all duration-200 hover:opacity-90 hover:shadow-lg cursor-pointer"
               style={{ background: 'linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%)' }}
             >
-              Get started →
-            </button>
+              Get Started →
+            </Link>
           </div>
         </div>
 
