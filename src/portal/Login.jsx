@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff, Lock, ArrowRight, CheckCircle2, Mail } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { gooeyToast } from 'goey-toast';
 
@@ -83,10 +83,12 @@ const Login = ({ userLoggedIn }) => {
 
         {/* Top Section */}
         <div className="relative z-10 space-y-12">
-          <div>
-            <img src="./strativa.png" width={140} className="brightness-0 invert opacity-95 mb-2" alt="Strativa" />
-            <div className="h-px w-12 bg-gradient-to-r from-emerald-500 to-transparent mt-4"></div>
-          </div>
+            <div>
+              <Link to="/">
+              <img src="./strativa.png" width={140} className="brightness-0 invert opacity-95 mb-2" alt="Strativa" />
+              </Link>
+              <div className="h-px w-12 bg-gradient-to-r from-emerald-500 to-transparent mt-4"></div>
+            </div>
 
           <div className="space-y-4">
             <h1 className="text-5xl font-bold text-white leading-tight tracking-tight">

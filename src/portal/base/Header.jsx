@@ -263,14 +263,13 @@ const Header = ({ userLoggedOut, userLogged }) => {
 
         {/* ── CENTER: Logo ── */}
         <div className="absolute left-1/2 -translate-x-1/2">
-          <Link to="/hr360">
+  
             <img
               src={LogoImage}
               width={132}
               alt="Strativa"
               className="hover:opacity-80 transition-opacity duration-200"
             />
-          </Link>
         </div>
 
         {/* ── RIGHT ── */}

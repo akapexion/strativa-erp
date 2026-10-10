@@ -172,10 +172,6 @@ const Hero = () => {
 
             {/* Badges */}
             <div className="flex flex-wrap items-center gap-2.5">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-50/90 dark:bg-indigo-500/10 border border-indigo-200/80 dark:border-indigo-500/25 shadow-2xs">
-                <span className="w-2 h-2 rounded-full bg-indigo-600 dark:bg-indigo-400 animate-pulse" />
-                <span>Presented by <strong className="font-black text-indigo-950 dark:text-indigo-200">Apexion</strong></span>
-              </div>
               <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold text-blue-700 dark:text-blue-300 bg-blue-50/90 dark:bg-blue-500/10 border border-blue-200/80 dark:border-blue-500/25 shadow-2xs">
                 <Zap size={13} className="text-blue-500 dark:text-blue-400" fill="currentColor" />
                 <span>Workforce Intelligence Platform</span>

@@ -74,16 +74,6 @@ const Footer = () => {
                 organizations streamline HR operations and make smarter decisions.
               </p>
 
-              {/* Apexion Representation Badge */}
-              <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-xl bg-slate-800/80 border border-slate-700/80 mb-6">
-                <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400">
-                  Presented by
-                </span>
-                <span className="text-sm font-black text-indigo-400 tracking-tight">
-                  Apexion
-                </span>
-              </div>
-
               {/* Social Icons with functional links */}
               <div className="flex gap-3">
                 {socialLinks.map(({ Icon, label, href }) => (
@@ -139,7 +129,7 @@ const Footer = () => {
             </p>
             <div className="hidden sm:block w-px h-3.5 bg-slate-700" />
             <span className="text-xs text-slate-400">
-              Launched & Powered by <strong className="text-indigo-400 font-bold">Apexion</strong>
+              Launched & Powered by <a href="https://apexionltd.vercel.app/" target="_blank"><strong className="text-indigo-400 font-bold">Apexion</strong></a>
             </span>
           </div>
           
@@ -162,7 +152,7 @@ const Footer = () => {
                 size={14} 
                 className="text-blue-500 group-hover:scale-110 transition-transform" 
               />
-              <span className="text-xs md:text-sm">hr-support@strativa.com</span>
+              <span className="text-xs md:text-sm">apexionspace@gmail.com</span>
             </a>
 
             {/* Security Badge */}

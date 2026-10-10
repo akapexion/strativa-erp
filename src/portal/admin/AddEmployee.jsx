@@ -12,7 +12,6 @@ import {
   Plus,
   Trash2,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { gooeyToast } from "goey-toast";
 import { z } from "zod";
@@ -285,7 +284,6 @@ const Field = ({ label, error, children }) => (
 );
 
 const AddEmployee = () => {
-  const navigate = useNavigate();
 
   const initialFormData = {
     employee_fname: "", employee_lname: "", employee_email: "",
@@ -391,16 +389,12 @@ const AddEmployee = () => {
         {/* ── Sticky Header ── */}
         <div className="page-header px-6 py-3.5 flex items-center justify-between sticky top-0 z-40">
           <div className="flex items-center gap-3">
-            <button onClick={() => navigate(-1)} className="back-btn cursor-pointer">
-              <ArrowLeft size={20} />
-            </button>
             <div>
               <h1 className="text-base font-extrabold text-slate-900 leading-tight tracking-tight">Add New Employee</h1>
               <p className="text-[11px] text-slate-400 font-medium">Fill in the details below to onboard a new team member</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <button onClick={() => navigate(-1)} className="discard-btn cursor-pointer">Discard</button>
             <button onClick={handleSubmit} className="save-btn flex items-center gap-2 px-5 py-2.5 text-white text-sm font-bold rounded-xl cursor-pointer">
               <Save size={15} strokeWidth={2.5} />
               Save Profile

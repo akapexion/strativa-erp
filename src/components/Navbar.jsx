@@ -26,10 +26,8 @@ const Navbar = ({ userLogged }) => {
     : "/hr360/user";
 
   const navLinks = [
-    { name: "Home", path: "/" },
-    { name: "About Us", path: "/about-us" },
     { name: "Modules", path: "/modules" },
-    { name: "Contact", path: "/contact-us" },
+    { name: "The Process", path: "/about-us" }
   ];
 
   const navBg = isDark
@@ -69,24 +67,19 @@ const Navbar = ({ userLogged }) => {
               className={`transition-opacity duration-200 hover:opacity-85 ${isDark ? "invert brightness-110" : ""}`}
             />
           </Link>
-          <span className="hidden xl:inline-flex items-center gap-1 text-[10px] font-bold tracking-wider uppercase text-slate-400 dark:text-slate-500 bg-slate-100/80 dark:bg-slate-800 px-2 py-0.5 rounded-md border border-slate-200/60 dark:border-slate-700">
-            by <strong className="text-indigo-600 dark:text-indigo-400 font-extrabold">Apexion</strong>
-          </span>
         </div>
 
-        {/* Desktop Nav Links */}
+        {/* Right: Theme Toggle + CTA + Mobile Toggle */}
+        <div className="flex items-center gap-2.5">
+
+          {/* Desktop Nav Links */}
         <div className="hidden md:flex items-center gap-1 lg:gap-2">
           {navLinks.map((link) => {
-            const isActive = location.pathname === link.path;
             return (
               <NavLink
                 key={link.name}
                 to={link.path}
-                className={`px-3.5 py-2 rounded-xl text-sm font-semibold transition-all duration-200 ${
-                  isActive
-                    ? "text-blue-700 dark:text-blue-400 bg-blue-50/80 dark:bg-blue-500/10 font-bold shadow-2xs border border-blue-100/80 dark:border-blue-500/20"
-                    : "text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-100/70 dark:hover:bg-slate-800"
-                }`}
+                className={`px-3.5 py-2 rounded-xl text-sm font-semibold tracking-wider transition-all duration-200 ${isDark ? "text-white" : "text-gray-500"}  `}
               >
                 {link.name}
               </NavLink>
@@ -94,14 +87,11 @@ const Navbar = ({ userLogged }) => {
           })}
         </div>
 
-        {/* Right: Theme Toggle + CTA + Mobile Toggle */}
-        <div className="flex items-center gap-2.5">
-
           {/* Dark/Light Toggle */}
           <button
             onClick={toggle}
             aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
-            className="relative w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200 cursor-pointer border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-blue-300 dark:hover:border-indigo-500 hover:bg-blue-50 dark:hover:bg-slate-700 shadow-xs group"
+            className="relative w-9 h-9 flex items-center justify-center transition-all duration-200 cursor-pointer hover:border-blue-300 dark:hover:border-indigo-500 hover:bg-blue-50 dark:hover:bg-slate-700 shadow-xs group"
           >
             <span className="absolute inset-0 rounded-xl transition-opacity duration-300" />
             {isDark ? (
