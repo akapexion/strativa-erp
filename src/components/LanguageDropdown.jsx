@@ -29,8 +29,6 @@ const LanguageDropdown = ({ isDark }) => {
         aria-label="Select language"
         className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-all duration-200"
         style={{
-          background: isDark ? 'rgba(30,41,59,0.8)' : 'rgba(241,245,249,0.9)',
-          border: isDark ? '1px solid rgba(71,85,105,0.6)' : '1px solid rgba(226,232,240,0.8)',
           color: isDark ? '#94a3b8' : '#475569',
         }}
       >

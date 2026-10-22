@@ -54,15 +54,13 @@ const VisitorBadge = () => {
   return (
     <div
       title="Total Website Visitors (via Abacus API)"
-      className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200/70 text-emerald-700 select-none mr-1 shadow-xs"
+      className="hidden sm:flex items-center gap-2 px-3 py-1.5 text-[#4f46e5] select-none mr-1"
     >
-      <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-      <Globe size={14} className="text-emerald-600" />
-      <div className="flex flex-col leading-tight">
-        <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600">
-          Web Visitors
+      <div className="leading-tight space-x-2">
+        <span className="text-[10px] font-bold uppercase tracking-wider">
+          Visitors :
         </span>
-        <span className="text-xs font-black text-emerald-800">
+        <span className="text-xs font-black">
           {count !== null ? count.toLocaleString() : '...'}
         </span>
       </div>

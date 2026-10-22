@@ -15,9 +15,6 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 import { gooeyToast } from "goey-toast";
 
-const ABACUS_NS = 'strativa-hrms.com';
-const ABACUS_KEY = 'visitors';
-
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
 
@@ -223,7 +220,6 @@ const Employees = () => {
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [visitorCount, setVisitorCount] = useState(null);
   const navigate = useNavigate();
 
   const fetchEmployees = async () => {
@@ -237,19 +233,8 @@ const Employees = () => {
     }
   };
 
-  const fetchVisitorCount = async () => {
-    try {
-      const res = await fetch(`https://abacus.jasoncameron.dev/get/${ABACUS_NS}/${ABACUS_KEY}`);
-      const data = await res.json();
-      if (data?.value !== undefined) setVisitorCount(data.value);
-    } catch {
-      // silently ignore
-    }
-  };
-
   useEffect(() => {
     fetchEmployees();
-    fetchVisitorCount();
   }, []);
 
   const handleDelete = async (id) => {
@@ -313,15 +298,6 @@ const Employees = () => {
             <div className="stat-chip min-w-[140px]">
               <span className="text-[12px] font-semibold text-slate-400 uppercase tracking-wider">Total</span>
               <span className="text-xl font-black text-indigo-500">{loading ? "—" : filtered.length}</span>
-            </div>
-            <div className="visitor-chip min-w-[180px]">
-              <Globe size={16} className="text-emerald-600 shrink-0" />
-              <div>
-                <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider leading-none mb-0.5">Web Visitors</p>
-                <p className="text-xl font-black text-emerald-700 leading-none">
-                  {visitorCount !== null ? visitorCount.toLocaleString() : '—'}
-                </p>
-              </div>
             </div>
           </div>
 
