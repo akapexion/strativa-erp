@@ -4,6 +4,9 @@ import React, { useState } from "react";
 import { KeyRound, Eye, EyeOff, ShieldCheck, Loader2 } from "lucide-react";
 import { z } from "zod";
 
+import { API_BASE_URL } from "../config/api.js";
+import { showValidationToast } from "../utils/formValidationToast.js";
+
 // ─── Zod Schema ───────────────────────────────────────────────────────────────
 const changePasswordSchema = z
   .object({
@@ -83,6 +86,7 @@ const ProfileChangePassword = () => {
         Object.entries(fieldErrors).map(([key, msgs]) => [key, msgs[0]]),
       );
       setErrors(firstErrors);
+      showValidationToast(Object.values(firstErrors));
       return; // stop submission
     }
 
@@ -92,7 +96,7 @@ const ProfileChangePassword = () => {
     setLoading(true);
     try {
       await axios.put(
-        `http://localhost:5000/profile/${employeeId}/change-password`,
+        `${API_BASE_URL}/profile/${employeeId}/change-password`,
         passwords,
       );
 

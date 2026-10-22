@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
+import { API_BASE_URL, getUploadUrl } from "../../config/api.js";
 
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
@@ -177,7 +178,7 @@ const DFISubmissions = () => {
     setError(null);
     try {
       const user = JSON.parse(localStorage.getItem("user"));
-      const res = await axios.get(`http://localhost:5000/user/dfis/${user.user_code}`);
+      const res = await axios.get(`${API_BASE_URL}/user/dfis/${user.user_code}`);
       setSubmissions(res.data.data || res.data || []);
     } catch (err) {
       console.error(err);

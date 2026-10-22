@@ -38,6 +38,8 @@ import RaiseCustomForm from "./portal/users/RaiseCustomForm";
 import Forms from "./portal/admin/Forms";
 import Attendance from "./portal/users/Attendance";
 import SalaryPayslip from "./portal/users/SalaryPayslip";
+import Firms from "./portal/admin/Firms";
+import EmployeeChat from "./portal/chat/EmployeeChat";
 
 const App = () => {
   // Load user from localStorage to persist login on refresh
@@ -121,8 +123,9 @@ const App = () => {
           {/* Default admin landing page */}
           <Route
             index
-            element={<Navigate to="add-employee" replace />}
+            element={<Navigate to="firms" replace />}
           />
+          <Route path="firms" element={<Firms />} />
           <Route path="forms" element={<Forms />} />
           <Route path="add-form" element={<AddForm />} />
           <Route path="edit-form/:formId" element={<AddForm />} />
@@ -154,6 +157,7 @@ const App = () => {
           <Route path="leaves" element={<Leaves />} />
           <Route path="attendance" element={<Attendance />} />
           <Route path="payslip" element={<SalaryPayslip />} />
+          <Route path="chat" element={<EmployeeChat />} />
           <Route path="form-submission/:id" element={<EmployeeFormDetail />} />
           <Route path="raise-custom-form/:formId" element={<RaiseCustomForm />} />
           <Route path="raise-appraisal" element={<RaiseAppraisal />} />
@@ -182,8 +186,12 @@ const App = () => {
           />
           <Route path="form-requests" element={<FormRequests />} />
           <Route path="leave-requests" element={<LeaveRequests />} />
+          <Route path="employees" element={<Employees />} />
+          <Route path="add-employee" element={<AddEmployee />} />
+          <Route path="update-employee/:id" element={<UpdateEmployee />} />
           <Route path="attendance" element={<Attendance />} />
           <Route path="payslip" element={<SalaryPayslip />} />
+          <Route path="chat" element={<EmployeeChat />} />
           <Route path="form-requests/:id" element={<EmployeeFormDetail />} />
           <Route path="profile" element={<Profile />} />
           <Route path="profile-changepassword" element={<ProfileChangePassword />} />

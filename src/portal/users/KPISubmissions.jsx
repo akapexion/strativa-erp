@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
+import { API_BASE_URL, getUploadUrl } from "../../config/api.js";
 
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
@@ -171,7 +172,7 @@ const KPISubmissions = () => {
     try {
       setLoading(true);
       const user = JSON.parse(localStorage.getItem("user"));
-      const res = await axios.get(`http://localhost:5000/user/kpis/${user.user_code}`);
+      const res = await axios.get(`${API_BASE_URL}/user/kpis/${user.user_code}`);
       setData(res.data.data || []);
     } catch (err) {
       console.error(err);

@@ -5,6 +5,7 @@ import {
   CheckCircle2,
   AlertCircle,
   XCircle,
+  HelpCircle,
   TrendingUp,
   UserCheck,
   UserX,
@@ -17,10 +18,16 @@ import {
   Check,
   Sparkles,
   ChevronRight,
+  ChevronLeft,
   Briefcase,
+  UploadCloud,
+  FileSpreadsheet,
+  RotateCcw,
 } from "lucide-react";
 import axios from "axios";
 import { gooeyToast } from "goey-toast";
+import { API_BASE_URL } from "../../config/api.js";
+import { showValidationToast } from "../../utils/formValidationToast.js";
 
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
@@ -36,6 +43,7 @@ const styles = `
     position: sticky; top: 0; z-index: 40;
     padding: 14px 24px;
     display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 12px;
   }
 
   /* ── Tabs ── */
@@ -63,7 +71,7 @@ const styles = `
   }
   .att-tab:not(.active):hover { background: #e8ecf0; color: #334155; }
 
-  /* ── Check In/Out Hero Card ── */
+  /* ── Hero Card ── */
   .att-hero-card {
     background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%);
     border-radius: 24px;
@@ -130,11 +138,12 @@ const styles = `
     padding: 5px 12px; border-radius: 99px;
     font-size: 11px; font-weight: 800; white-space: nowrap;
   }
-  .att-badge-present { background: #ecfdf5; border: 1.5px solid #a7f3d0; color: #059669; }
-  .att-badge-late    { background: #fffbeb; border: 1.5px solid #fde68a; color: #d97706; }
-  .att-badge-absent  { background: #fff1f2; border: 1.5px solid #fecdd3; color: #e11d48; }
-  .att-badge-leave   { background: #f5f3ff; border: 1.5px solid #ddd6fe; color: #7c3aed; }
-  .att-badge-half    { background: #eff6ff; border: 1.5px solid #bfdbfe; color: #2563eb; }
+  .att-badge-present    { background: #ecfdf5; border: 1.5px solid #a7f3d0; color: #059669; }
+  .att-badge-late       { background: #fffbeb; border: 1.5px solid #fde68a; color: #d97706; }
+  .att-badge-absent     { background: #fff1f2; border: 1.5px solid #fecdd3; color: #e11d48; }
+  .att-badge-leave      { background: #f5f3ff; border: 1.5px solid #ddd6fe; color: #7c3aed; }
+  .att-badge-half       { background: #eff6ff; border: 1.5px solid #bfdbfe; color: #2563eb; }
+  .att-badge-incomplete { background: #fef2f2; border: 1.5px solid #fca5a5; color: #b91c1c; }
 
   /* ── Table Card ── */
   .att-table-card {
@@ -164,6 +173,39 @@ const styles = `
   .att-td:first-child { padding-left: 28px; }
   .att-td:last-child  { padding-right: 28px; }
 
+  /* ── Filter Bar ── */
+  .att-filter-bar {
+    padding: 16px 24px;
+    background: #ffffff;
+    border-bottom: 1px solid #f1f5f9;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 14px;
+  }
+
+  .att-date-input {
+    padding: 7px 12px; font-size: 12px; font-weight: 600; color: #1e293b;
+    border: 1.5px solid #e2e8f0; border-radius: 10px; outline: none;
+    transition: border-color 0.15s; font-family: inherit;
+  }
+  .att-date-input:focus { border-color: #6366f1; }
+
+  .att-filter-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 14px; font-size: 12px; font-weight: 700;
+    border-radius: 10px; cursor: pointer; border: none; font-family: inherit;
+    transition: all 0.15s;
+  }
+  .att-filter-apply { background: #6366f1; color: #fff; }
+  .att-filter-apply:hover { background: #4f46e5; }
+  .att-filter-reset { background: #f1f5f9; color: #64748b; }
+  .att-filter-reset:hover { background: #e2e8f0; color: #334155; }
+
+  /* ── Pagination ── */
+  .att-pagination {
+    padding: 14px 24px; background: #fafbfc; border-top: 1px solid #f1f5f9;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+
   /* ── Modal Overlay ── */
   .att-modal-overlay {
     position: fixed; inset: 0; z-index: 100;
@@ -171,7 +213,7 @@ const styles = `
     display: flex; align-items: center; justify-content: center; padding: 20px;
   }
   .att-modal {
-    background: #fff; border-radius: 24px; width: 100%; max-width: 480px;
+    background: #fff; border-radius: 24px; width: 100%; max-width: 520px;
     box-shadow: 0 20px 50px rgba(0,0,0,0.15); overflow: hidden;
   }
   .att-modal-header {
@@ -197,10 +239,6 @@ const styles = `
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     padding: 80px 24px; gap: 12px; text-align: center;
   }
-  .att-state-icon-wrap {
-    width: 64px; height: 64px; border-radius: 20px;
-    display: flex; align-items: center; justify-content: center; margin-bottom: 4px;
-  }
 `;
 
 const StatusBadge = ({ status }) => {
@@ -213,12 +251,19 @@ const StatusBadge = ({ status }) => {
     return <span className="att-badge att-badge-leave"><Calendar size={10} strokeWidth={2.5} /> On Leave</span>;
   if (s === "half day")
     return <span className="att-badge att-badge-half"><Clock size={10} strokeWidth={2.5} /> Half Day</span>;
+  if (s === "incomplete")
+    return <span className="att-badge att-badge-incomplete"><HelpCircle size={10} strokeWidth={2.5} /> Incomplete Punch</span>;
   return <span className="att-badge att-badge-absent"><XCircle size={10} strokeWidth={2.5} /> Absent</span>;
 };
 
 const Attendance = () => {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
-  const isManagerOrAdmin = user.user_role === "manager" || user.user_role === "admin" || user.user_role === "ceo" || user.user_designation === "CEO";
+  const isManagerOrAdmin =
+    user.user_role === "manager" ||
+    user.user_role === "admin" ||
+    user.user_role === "ceo" ||
+    user.user_designation === "CEO" ||
+    user.user_role === 0;
 
   const [activeTab, setActiveTab] = useState("my-attendance");
   const [myAttendance, setMyAttendance] = useState([]);
@@ -226,6 +271,12 @@ const Attendance = () => {
   const [teamAttendance, setTeamAttendance] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
+
+  // Date range filter state for personal history
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({ totalPages: 1, totalRecords: 0 });
 
   // Filter state for team view
   const [selectedDate, setSelectedDate] = useState(() => {
@@ -244,6 +295,11 @@ const Attendance = () => {
   const [editCheckOut, setEditCheckOut] = useState("");
   const [editRemarks, setEditRemarks] = useState("");
 
+  // Machine CSV Import Modal State
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importFile, setImportFile] = useState(null);
+  const [importing, setImporting] = useState(false);
+
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date().toLocaleTimeString()), 1000);
     return () => clearInterval(timer);
@@ -251,25 +307,29 @@ const Attendance = () => {
 
   const fetchMyAttendance = async () => {
     try {
-      const token = localStorage.getItem("token");
-      const res = await axios.get("http://localhost:5000/attendance/my-attendance", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      let url = `${API_BASE_URL}/attendance/my-attendance?page=${page}&limit=12`;
+      if (startDate) url += `&startDate=${startDate}`;
+      if (endDate) url += `&endDate=${endDate}`;
+
+      const res = await axios.get(url);
       if (res.data?.success) {
         setMyAttendance(res.data.data || []);
         setTodayRecord(res.data.todayRecord || null);
+        if (res.data.pagination) {
+          setPagination(res.data.pagination);
+        }
       }
     } catch (err) {
       console.error("Fetch My Attendance Error:", err);
+      if (err.response?.data?.message) {
+        showValidationToast(err.response.data.message);
+      }
     }
   };
 
   const fetchTeamAttendance = async () => {
     try {
-      const token = localStorage.getItem("token");
-      const res = await axios.get(`http://localhost:5000/attendance/team-attendance?date=${selectedDate}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await axios.get(`${API_BASE_URL}/attendance/team-attendance?date=${selectedDate}`);
       if (res.data?.success) {
         setTeamAttendance(res.data.data || []);
       }
@@ -280,23 +340,41 @@ const Attendance = () => {
 
   const loadData = async () => {
     setLoading(true);
-    await Promise.all([fetchMyAttendance(), isManagerOrAdmin ? fetchTeamAttendance() : Promise.resolve()]);
+    await Promise.all([
+      fetchMyAttendance(),
+      isManagerOrAdmin ? fetchTeamAttendance() : Promise.resolve(),
+    ]);
     setLoading(false);
   };
 
   useEffect(() => {
     loadData();
-  }, [selectedDate]);
+  }, [selectedDate, page]);
+
+  const handleApplyFilter = () => {
+    if (startDate && endDate && startDate > endDate) {
+      showValidationToast("Start date cannot be after end date.");
+      return;
+    }
+    setPage(1);
+    fetchMyAttendance();
+  };
+
+  const handleResetFilter = () => {
+    setStartDate("");
+    setEndDate("");
+    setPage(1);
+    setTimeout(() => {
+      fetchMyAttendance();
+    }, 0);
+  };
 
   const handleCheckIn = async () => {
     setActionLoading(true);
     try {
-      const token = localStorage.getItem("token");
-      const res = await axios.post("http://localhost:5000/attendance/check-in", {
-        employee_name : user.user_fullname,
-        employee_code : user.user_code
-      }, {
-        headers: { Authorization: `Bearer ${token}` },
+      const res = await axios.post(`${API_BASE_URL}/attendance/check-in`, {
+        employee_name: user.user_fullname,
+        employee_code: user.user_code,
       });
       gooeyToast.success(res.data.message || "Checked in successfully", {
         fillColor: "#FFF",
@@ -306,11 +384,7 @@ const Attendance = () => {
       fetchMyAttendance();
     } catch (err) {
       console.error("Check in error:", err);
-      gooeyToast.error(err.response?.data?.message || "Check in failed", {
-        fillColor: "#FFF",
-        bounce: 0.45,
-        timing: { displayDuration: 2500 },
-      });
+      showValidationToast(err.response?.data?.message || "Check in failed");
     } finally {
       setActionLoading(false);
     }
@@ -319,9 +393,8 @@ const Attendance = () => {
   const handleCheckOut = async () => {
     setActionLoading(true);
     try {
-      const token = localStorage.getItem("token");
-      const res = await axios.post("http://localhost:5000/attendance/check-out", {}, {
-        headers: { Authorization: `Bearer ${token}` },
+      const res = await axios.post(`${API_BASE_URL}/attendance/check-out`, {
+        employee_code: user.user_code,
       });
       gooeyToast.success(res.data.message || "Checked out successfully", {
         fillColor: "#FFF",
@@ -331,11 +404,7 @@ const Attendance = () => {
       fetchMyAttendance();
     } catch (err) {
       console.error("Check out error:", err);
-      gooeyToast.error(err.response?.data?.message || "Check out failed", {
-        fillColor: "#FFF",
-        bounce: 0.45,
-        timing: { displayDuration: 2500 },
-      });
+      showValidationToast(err.response?.data?.message || "Check out failed");
     } finally {
       setActionLoading(false);
     }
@@ -344,7 +413,6 @@ const Attendance = () => {
   const handleSaveManualAttendance = async () => {
     if (!editRecordModal) return;
     try {
-      const token = localStorage.getItem("token");
       const payload = {
         employee_code: editRecordModal.employee_code,
         employee_name: editRecordModal.employee_name,
@@ -355,9 +423,7 @@ const Attendance = () => {
         remarks: editRemarks,
       };
 
-      const res = await axios.post("http://localhost:5000/attendance/mark-manual", payload, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await axios.post(`${API_BASE_URL}/attendance/mark-manual`, payload);
       gooeyToast.success(res.data.message || "Attendance updated", {
         fillColor: "#FFF",
         bounce: 0.45,
@@ -367,24 +433,54 @@ const Attendance = () => {
       fetchTeamAttendance();
     } catch (err) {
       console.error("Save manual attendance error:", err);
-      gooeyToast.error(err.response?.data?.message || "Failed to update attendance", {
+      showValidationToast(err.response?.data?.message || "Failed to update attendance");
+    }
+  };
+
+  // CSV Attendance Punch Import
+  const handleImportCsv = async (e) => {
+    e.preventDefault();
+    if (!importFile) {
+      showValidationToast("Please select a CSV attendance punch file");
+      return;
+    }
+
+    setImporting(true);
+    try {
+      const formData = new FormData();
+      formData.append("csv_file", importFile);
+
+      const res = await axios.post(`${API_BASE_URL}/attendance/import-punches`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      gooeyToast.success(res.data.message || "Attendance punches imported", {
         fillColor: "#FFF",
         bounce: 0.45,
-        timing: { displayDuration: 2500 },
+        timing: { displayDuration: 3000 },
       });
+
+      setShowImportModal(false);
+      setImportFile(null);
+      loadData();
+    } catch (err) {
+      showValidationToast(err.response?.data?.message || "Failed to import attendance CSV");
+    } finally {
+      setImporting(false);
     }
   };
 
   // Stats Calculations
-  const totalDaysLogged = myAttendance.length;
+  const totalDaysLogged = pagination.totalRecords || myAttendance.length;
   const presentDaysCount = myAttendance.filter((r) => r.status === "Present").length;
   const lateDaysCount = myAttendance.filter((r) => r.status === "Late").length;
   const absentCount = myAttendance.filter((r) => r.status === "Absent").length;
 
-  const filteredTeam = teamAttendance.filter((emp) =>
-    emp.employee_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    emp.employee_code.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    emp.employee_department.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredTeam = teamAttendance.filter(
+    (emp) =>
+      emp.employee_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      emp.employee_code?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      emp.employee_department?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
@@ -395,36 +491,58 @@ const Attendance = () => {
         <div className="att-page-header">
           <div>
             <h1 style={{ fontSize: 16, fontWeight: 900, color: "#0f172a", letterSpacing: "-0.01em", lineHeight: 1.2 }}>
-              Attendance Portal
+              Attendance &amp; Check-In Portal
             </h1>
             <p style={{ fontSize: 11, color: "#94a3b8", fontWeight: 500, marginTop: 2 }}>
-              Track daily check-ins, work hours, and team attendance records
+              Biometric check-ins, working duration calculation, and history logs
             </p>
           </div>
 
-          {isManagerOrAdmin && (
-            <div className="att-tabs">
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            {isManagerOrAdmin && (
               <button
-                className={`att-tab${activeTab === "my-attendance" ? " active" : ""}`}
-                onClick={() => setActiveTab("my-attendance")}
+                onClick={() => setShowImportModal(true)}
+                className="att-filter-btn"
+                style={{ background: "#f5f3ff", color: "#6366f1", border: "1.5px solid #e0e7ff" }}
+                title="Import device punch records"
               >
-                <Clock size={14} strokeWidth={2.5} />
-                My Attendance
+                <UploadCloud size={14} />
+                Import Machine CSV
               </button>
-              <button
-                className={`att-tab${activeTab === "team-attendance" ? " active" : ""}`}
-                onClick={() => setActiveTab("team-attendance")}
-              >
-                <Users size={14} strokeWidth={2.5} />
-                Team Attendance
-              </button>
-            </div>
-          )}
+            )}
+
+            {isManagerOrAdmin && (
+              <div className="att-tabs">
+                <button
+                  className={`att-tab${activeTab === "my-attendance" ? " active" : ""}`}
+                  onClick={() => setActiveTab("my-attendance")}
+                >
+                  <Clock size={14} strokeWidth={2.5} />
+                  My Attendance
+                </button>
+                <button
+                  className={`att-tab${activeTab === "team-attendance" ? " active" : ""}`}
+                  onClick={() => setActiveTab("team-attendance")}
+                >
+                  <Users size={14} strokeWidth={2.5} />
+                  Team Attendance
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Main Body */}
-        <main style={{ maxWidth: 1040, margin: "0 auto", padding: "32px 24px", display: "flex", flexDirection: "column", gap: 24 }}>
-          
+        <main
+          style={{
+            maxWidth: 1080,
+            margin: "0 auto",
+            padding: "32px 24px",
+            display: "flex",
+            flexDirection: "column",
+            gap: 24,
+          }}
+        >
           {/* ════════════════════════════════════
               TAB 1 — MY ATTENDANCE
           ════════════════════════════════════ */}
@@ -433,9 +551,25 @@ const Attendance = () => {
               {/* Check-In / Check-Out Hero Card */}
               <div className="att-hero-card">
                 <div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#a5b4fc", fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      color: "#a5b4fc",
+                      fontSize: 12,
+                      fontWeight: 700,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.08em",
+                    }}
+                  >
                     <Calendar size={14} />
-                    {new Date().toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric", year: "numeric" })}
+                    {new Date().toLocaleDateString("en-US", {
+                      weekday: "long",
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                    })}
                   </div>
                   <h2 style={{ fontSize: 32, fontWeight: 900, marginTop: 4, letterSpacing: "-0.02em" }}>
                     {currentTime}
@@ -447,41 +581,67 @@ const Attendance = () => {
 
                 <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
                   {todayRecord?.check_in && (
-                    <div style={{ background: "rgba(255,255,255,0.1)", padding: "12px 20px", borderRadius: 16, border: "1px solid rgba(255,255,255,0.15)" }}>
-                      <p style={{ fontSize: 10, fontWeight: 800, color: "#a5b4fc", textTransform: "uppercase" }}>Check-In Time</p>
-                      <p style={{ fontSize: 16, fontWeight: 900, color: "#fff", marginTop: 2 }}>{todayRecord.check_in}</p>
+                    <div
+                      style={{
+                        background: "rgba(255,255,255,0.1)",
+                        padding: "12px 20px",
+                        borderRadius: 16,
+                        border: "1px solid rgba(255,255,255,0.15)",
+                      }}
+                    >
+                      <p style={{ fontSize: 10, fontWeight: 800, color: "#a5b4fc", textTransform: "uppercase" }}>
+                        Check-In Time
+                      </p>
+                      <p style={{ fontSize: 16, fontWeight: 900, color: "#fff", marginTop: 2 }}>
+                        {todayRecord.check_in}
+                      </p>
                     </div>
                   )}
 
                   {todayRecord?.check_out && (
-                    <div style={{ background: "rgba(255,255,255,0.1)", padding: "12px 20px", borderRadius: 16, border: "1px solid rgba(255,255,255,0.15)" }}>
-                      <p style={{ fontSize: 10, fontWeight: 800, color: "#a5b4fc", textTransform: "uppercase" }}>Check-Out Time</p>
-                      <p style={{ fontSize: 16, fontWeight: 900, color: "#fff", marginTop: 2 }}>{todayRecord.check_out}</p>
+                    <div
+                      style={{
+                        background: "rgba(255,255,255,0.1)",
+                        padding: "12px 20px",
+                        borderRadius: 16,
+                        border: "1px solid rgba(255,255,255,0.15)",
+                      }}
+                    >
+                      <p style={{ fontSize: 10, fontWeight: 800, color: "#a5b4fc", textTransform: "uppercase" }}>
+                        Check-Out Time
+                      </p>
+                      <p style={{ fontSize: 16, fontWeight: 900, color: "#fff", marginTop: 2 }}>
+                        {todayRecord.check_out}
+                      </p>
                     </div>
                   )}
 
                   {!todayRecord?.check_in ? (
-                    <button
-                      onClick={handleCheckIn}
-                      disabled={actionLoading}
-                      className="att-btn-checkin"
-                    >
+                    <button onClick={handleCheckIn} disabled={actionLoading} className="att-btn-checkin">
                       {actionLoading ? <Loader2 size={16} className="animate-spin" /> : <Clock size={16} strokeWidth={2.5} />}
                       Check In Today
                     </button>
                   ) : !todayRecord?.check_out ? (
-                    <button
-                      onClick={handleCheckOut}
-                      disabled={actionLoading}
-                      className="att-btn-checkout"
-                    >
+                    <button onClick={handleCheckOut} disabled={actionLoading} className="att-btn-checkout">
                       {actionLoading ? <Loader2 size={16} className="animate-spin" /> : <UserCheck size={16} strokeWidth={2.5} />}
                       Check Out Now
                     </button>
                   ) : (
-                    <div style={{ background: "rgba(16, 185, 129, 0.2)", padding: "12px 20px", borderRadius: 16, border: "1.5px solid #10b981", display: "flex", alignItems: "center", gap: 8 }}>
+                    <div
+                      style={{
+                        background: "rgba(16, 185, 129, 0.2)",
+                        padding: "12px 20px",
+                        borderRadius: 16,
+                        border: "1.5px solid #10b981",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 8,
+                      }}
+                    >
                       <CheckCircle2 size={18} color="#34d399" strokeWidth={2.5} />
-                      <span style={{ fontSize: 13, fontWeight: 800, color: "#34d399" }}>Completed Today ({todayRecord.work_hours})</span>
+                      <span style={{ fontSize: 13, fontWeight: 800, color: "#34d399" }}>
+                        Completed ({todayRecord.work_hours})
+                      </span>
                     </div>
                   )}
                 </div>
@@ -495,7 +655,9 @@ const Attendance = () => {
                   </div>
                   <div>
                     <p style={{ fontSize: 22, fontWeight: 900, color: "#0f172a" }}>{totalDaysLogged}</p>
-                    <p style={{ fontSize: 11, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase" }}>Total Days Logged</p>
+                    <p style={{ fontSize: 11, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase" }}>
+                      Total Days Logged
+                    </p>
                   </div>
                 </div>
 
@@ -505,7 +667,9 @@ const Attendance = () => {
                   </div>
                   <div>
                     <p style={{ fontSize: 22, fontWeight: 900, color: "#0f172a" }}>{presentDaysCount}</p>
-                    <p style={{ fontSize: 11, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase" }}>On-Time Present</p>
+                    <p style={{ fontSize: 11, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase" }}>
+                      On-Time Present
+                    </p>
                   </div>
                 </div>
 
@@ -515,7 +679,9 @@ const Attendance = () => {
                   </div>
                   <div>
                     <p style={{ fontSize: 22, fontWeight: 900, color: "#0f172a" }}>{lateDaysCount}</p>
-                    <p style={{ fontSize: 11, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase" }}>Late Check-Ins</p>
+                    <p style={{ fontSize: 11, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase" }}>
+                      Late Arrivals
+                    </p>
                   </div>
                 </div>
 
@@ -525,22 +691,58 @@ const Attendance = () => {
                   </div>
                   <div>
                     <p style={{ fontSize: 22, fontWeight: 900, color: "#0f172a" }}>{absentCount}</p>
-                    <p style={{ fontSize: 11, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase" }}>Absences</p>
+                    <p style={{ fontSize: 11, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase" }}>
+                      Absences
+                    </p>
                   </div>
                 </div>
               </div>
 
-              {/* Personal Attendance Logs Table */}
+              {/* Personal Attendance Logs Table with Date Filters */}
               <div className="att-table-card">
-                <div style={{ padding: "18px 24px", background: "#fafbfc", borderBottom: "1px solid #f1f5f9", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <div className="att-filter-bar">
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     <div style={{ padding: 8, borderRadius: 10, background: "#f5f3ff", color: "#6366f1" }}>
                       <Clock size={16} strokeWidth={2.5} />
                     </div>
                     <div>
-                      <p style={{ fontSize: 13, fontWeight: 800, color: "#0f172a" }}>Personal Attendance Log</p>
-                      <p style={{ fontSize: 11, color: "#94a3b8", fontWeight: 500 }}>Historical check-ins and working hours</p>
+                      <p style={{ fontSize: 13, fontWeight: 800, color: "#0f172a" }}>Personal Attendance History</p>
+                      <p style={{ fontSize: 11, color: "#94a3b8", fontWeight: 500 }}>
+                        Filter records by date range and view exact punch times
+                      </p>
                     </div>
+                  </div>
+
+                  {/* Date Range Controls */}
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <label style={{ fontSize: 11, fontWeight: 700, color: "#64748b" }}>From:</label>
+                      <input
+                        type="date"
+                        value={startDate}
+                        onChange={(e) => setStartDate(e.target.value)}
+                        className="att-date-input"
+                      />
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <label style={{ fontSize: 11, fontWeight: 700, color: "#64748b" }}>To:</label>
+                      <input
+                        type="date"
+                        value={endDate}
+                        onChange={(e) => setEndDate(e.target.value)}
+                        className="att-date-input"
+                      />
+                    </div>
+                    <button onClick={handleApplyFilter} className="att-filter-btn att-filter-apply">
+                      <Filter size={12} />
+                      Filter
+                    </button>
+                    {(startDate || endDate) && (
+                      <button onClick={handleResetFilter} className="att-filter-btn att-filter-reset">
+                        <RotateCcw size={12} />
+                        Reset
+                      </button>
+                    )}
                   </div>
                 </div>
 
@@ -552,52 +754,111 @@ const Attendance = () => {
                 ) : myAttendance.length === 0 ? (
                   <div className="att-state-wrap">
                     <Clock size={28} color="#cbd5e1" />
-                    <p style={{ fontSize: 14, fontWeight: 800, color: "#0f172a" }}>No Attendance History</p>
-                    <p style={{ fontSize: 12, color: "#94a3b8" }}>Check in today to create your first attendance record.</p>
+                    <p style={{ fontSize: 14, fontWeight: 800, color: "#0f172a" }}>No Attendance History Found</p>
+                    <p style={{ fontSize: 12, color: "#94a3b8" }}>
+                      {startDate || endDate
+                        ? "No attendance records found within the selected date range."
+                        : "Check in today to create your first attendance record."}
+                    </p>
+                    {(startDate || endDate) && (
+                      <button onClick={handleResetFilter} className="att-filter-btn att-filter-reset" style={{ marginTop: 6 }}>
+                        Clear Date Filter
+                      </button>
+                    )}
                   </div>
                 ) : (
-                  <div style={{ overflowX: "auto" }}>
-                    <table className="att-table">
-                      <thead>
-                        <tr>
-                          <th className="att-th">Date</th>
-                          <th className="att-th">Check In</th>
-                          <th className="att-th">Check Out</th>
-                          <th className="att-th">Work Duration</th>
-                          <th className="att-th">Status</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {myAttendance.map((rec) => (
-                          <tr key={rec._id} className="att-tr">
-                            <td className="att-td">
-                              <span style={{ fontSize: 13, fontWeight: 800, color: "#0f172a" }}>
-                                {rec.date}
-                              </span>
-                            </td>
-                            <td className="att-td">
-                              <span style={{ fontSize: 13, fontWeight: 700, color: "#475569" }}>
-                                {rec.check_in || "—"}
-                              </span>
-                            </td>
-                            <td className="att-td">
-                              <span style={{ fontSize: 13, fontWeight: 700, color: "#475569" }}>
-                                {rec.check_out || "—"}
-                              </span>
-                            </td>
-                            <td className="att-td">
-                              <span style={{ fontSize: 12, fontWeight: 700, color: "#6366f1", background: "#f5f3ff", padding: "3px 10px", borderRadius: 8 }}>
-                                {rec.work_hours || "0 hrs"}
-                              </span>
-                            </td>
-                            <td className="att-td">
-                              <StatusBadge status={rec.status} />
-                            </td>
+                  <>
+                    <div style={{ overflowX: "auto" }}>
+                      <table className="att-table">
+                        <thead>
+                          <tr>
+                            <th className="att-th">Date</th>
+                            <th className="att-th">Check In</th>
+                            <th className="att-th">Check Out</th>
+                            <th className="att-th">Working Duration</th>
+                            <th className="att-th">Scheduled</th>
+                            <th className="att-th">Status</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                        </thead>
+                        <tbody>
+                          {myAttendance.map((rec) => (
+                            <tr key={rec._id || rec.date} className="att-tr">
+                              <td className="att-td">
+                                <span style={{ fontSize: 13, fontWeight: 800, color: "#0f172a" }}>
+                                  {rec.date}
+                                </span>
+                              </td>
+                              <td className="att-td">
+                                <span style={{ fontSize: 13, fontWeight: 700, color: rec.check_in ? "#334155" : "#94a3b8" }}>
+                                  {rec.check_in || "—"}
+                                </span>
+                              </td>
+                              <td className="att-td">
+                                <span style={{ fontSize: 13, fontWeight: 700, color: rec.check_out ? "#334155" : "#94a3b8" }}>
+                                  {rec.check_out || "—"}
+                                </span>
+                              </td>
+                              <td className="att-td">
+                                {rec.work_hours && rec.work_hours !== "—" ? (
+                                  <span
+                                    style={{
+                                      fontSize: 12,
+                                      fontWeight: 700,
+                                      color: "#6366f1",
+                                      background: "#f5f3ff",
+                                      padding: "3px 10px",
+                                      borderRadius: 8,
+                                    }}
+                                  >
+                                    {rec.work_hours}
+                                  </span>
+                                ) : (
+                                  <span style={{ fontSize: 12, fontWeight: 600, color: "#94a3b8" }}>
+                                    Incomplete
+                                  </span>
+                                )}
+                              </td>
+                              <td className="att-td">
+                                <span style={{ fontSize: 12, fontWeight: 600, color: "#64748b" }}>
+                                  {rec.scheduled_hours || "8.0 hrs"}
+                                </span>
+                              </td>
+                              <td className="att-td">
+                                <StatusBadge status={rec.status} />
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Pagination Bar */}
+                    {pagination.totalPages > 1 && (
+                      <div className="att-pagination">
+                        <p style={{ fontSize: 12, color: "#64748b", fontWeight: 600 }}>
+                          Showing page {pagination.currentPage} of {pagination.totalPages} ({pagination.totalRecords} records)
+                        </p>
+                        <div style={{ display: "flex", gap: 6 }}>
+                          <button
+                            disabled={page <= 1}
+                            onClick={() => setPage((p) => Math.max(1, p - 1))}
+                            className="att-filter-btn att-filter-reset"
+                            style={{ opacity: page <= 1 ? 0.4 : 1 }}
+                          >
+                            <ChevronLeft size={14} /> Previous
+                          </button>
+                          <button
+                            disabled={page >= pagination.totalPages}
+                            onClick={() => setPage((p) => p + 1)}
+                            className="att-filter-btn att-filter-reset"
+                            style={{ opacity: page >= pagination.totalPages ? 0.4 : 1 }}
+                          >
+                            Next <ChevronRight size={14} />
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             </>
@@ -608,12 +869,28 @@ const Attendance = () => {
           ════════════════════════════════════ */}
           {activeTab === "team-attendance" && isManagerOrAdmin && (
             <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-              
               {/* Controls bar */}
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  flexWrap: "wrap",
+                  gap: 16,
+                }}
+              >
                 <div style={{ display: "flex", alignItems: "center", gap: 12, flex: 1, maxWidth: 450 }}>
                   <div style={{ position: "relative", flex: 1 }}>
-                    <Search size={15} style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "#94a3b8" }} />
+                    <Search
+                      size={15}
+                      style={{
+                        position: "absolute",
+                        left: 12,
+                        top: "50%",
+                        transform: "translateY(-50%)",
+                        color: "#94a3b8",
+                      }}
+                    />
                     <input
                       type="text"
                       placeholder="Search team member name or code…"
@@ -642,7 +919,9 @@ const Attendance = () => {
                 {loading ? (
                   <div className="att-state-wrap">
                     <Loader2 size={24} color="#6366f1" className="animate-spin" />
-                    <p style={{ fontSize: 13, fontWeight: 700, color: "#64748b" }}>Loading team attendance for {selectedDate}…</p>
+                    <p style={{ fontSize: 13, fontWeight: 700, color: "#64748b" }}>
+                      Loading team attendance for {selectedDate}…
+                    </p>
                   </div>
                 ) : filteredTeam.length === 0 ? (
                   <div className="att-state-wrap">
@@ -660,9 +939,11 @@ const Attendance = () => {
                           <th className="att-th">Department</th>
                           <th className="att-th">Check In</th>
                           <th className="att-th">Check Out</th>
-                          <th className="att-th">Hours</th>
+                          <th className="att-th">Duration</th>
                           <th className="att-th">Status</th>
-                          <th className="att-th" style={{ textAlign: "right" }}>Action</th>
+                          <th className="att-th" style={{ textAlign: "right" }}>
+                            Action
+                          </th>
                         </tr>
                       </thead>
                       <tbody>
@@ -670,12 +951,24 @@ const Attendance = () => {
                           <tr key={emp.employee_code} className="att-tr">
                             <td className="att-td">
                               <div>
-                                <p style={{ fontSize: 13, fontWeight: 800, color: "#0f172a" }}>{emp.employee_name}</p>
+                                <p style={{ fontSize: 13, fontWeight: 800, color: "#0f172a" }}>
+                                  {emp.employee_name}
+                                </p>
                                 <p style={{ fontSize: 11, color: "#94a3b8" }}>{emp.employee_designation}</p>
                               </div>
                             </td>
                             <td className="att-td">
-                              <span style={{ fontFamily: "'Courier New', monospace", fontSize: 12, fontWeight: 700, color: "#475569", background: "#f1f5f9", padding: "2px 8px", borderRadius: 6 }}>
+                              <span
+                                style={{
+                                  fontFamily: "'Courier New', monospace",
+                                  fontSize: 12,
+                                  fontWeight: 700,
+                                  color: "#475569",
+                                  background: "#f1f5f9",
+                                  padding: "2px 8px",
+                                  borderRadius: 6,
+                                }}
+                              >
                                 {emp.employee_code}
                               </span>
                             </td>
@@ -711,7 +1004,17 @@ const Attendance = () => {
                                   setEditCheckOut(emp.check_out || "05:00 PM");
                                   setEditRemarks(emp.remarks || "");
                                 }}
-                                style={{ padding: "6px 12px", fontSize: 12, fontWeight: 700, color: "#6366f1", background: "#f5f3ff", border: "1.5px solid #e0e7ff", borderRadius: 8, cursor: "pointer", fontFamily: "inherit" }}
+                                style={{
+                                  padding: "6px 12px",
+                                  fontSize: 12,
+                                  fontWeight: 700,
+                                  color: "#6366f1",
+                                  background: "#f5f3ff",
+                                  border: "1.5px solid #e0e7ff",
+                                  borderRadius: 8,
+                                  cursor: "pointer",
+                                  fontFamily: "inherit",
+                                }}
                               >
                                 Edit
                               </button>
@@ -725,7 +1028,6 @@ const Attendance = () => {
               </div>
             </div>
           )}
-
         </main>
 
         {/* ── MODAL: MANUAL ATTENDANCE ADJUSTMENT ── */}
@@ -735,16 +1037,38 @@ const Attendance = () => {
               <div className="att-modal-header">
                 <div>
                   <h3 style={{ fontSize: 15, fontWeight: 800, color: "#0f172a" }}>Adjust Attendance</h3>
-                  <p style={{ fontSize: 11, color: "#94a3b8", marginTop: 2 }}>{editRecordModal.employee_name} ({editRecordModal.employee_code})</p>
+                  <p style={{ fontSize: 11, color: "#94a3b8", marginTop: 2 }}>
+                    {editRecordModal.employee_name} ({editRecordModal.employee_code})
+                  </p>
                 </div>
-                <button onClick={() => setEditRecordModal(null)} style={{ border: "none", background: "#f1f5f9", borderRadius: 8, padding: 6, cursor: "pointer" }}>
+                <button
+                  onClick={() => setEditRecordModal(null)}
+                  style={{
+                    border: "none",
+                    background: "#f1f5f9",
+                    borderRadius: 8,
+                    padding: 6,
+                    cursor: "pointer",
+                  }}
+                >
                   <X size={16} color="#64748b" />
                 </button>
               </div>
 
               <div className="att-modal-body">
                 <div>
-                  <label style={{ fontSize: 11, fontWeight: 800, color: "#64748b", textTransform: "uppercase", display: "block", marginBottom: 6 }}>Attendance Status</label>
+                  <label
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 800,
+                      color: "#64748b",
+                      textTransform: "uppercase",
+                      display: "block",
+                      marginBottom: 6,
+                    }}
+                  >
+                    Attendance Status
+                  </label>
                   <select
                     value={editStatus}
                     onChange={(e) => setEditStatus(e.target.value)}
@@ -754,13 +1078,25 @@ const Attendance = () => {
                     <option value="Late">Late</option>
                     <option value="Half Day">Half Day</option>
                     <option value="On Leave">On Leave</option>
+                    <option value="Incomplete">Incomplete Punch</option>
                     <option value="Absent">Absent</option>
                   </select>
                 </div>
 
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                   <div>
-                    <label style={{ fontSize: 11, fontWeight: 800, color: "#64748b", textTransform: "uppercase", display: "block", marginBottom: 6 }}>Check In Time</label>
+                    <label
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 800,
+                        color: "#64748b",
+                        textTransform: "uppercase",
+                        display: "block",
+                        marginBottom: 6,
+                      }}
+                    >
+                      Check In Time
+                    </label>
                     <input
                       type="text"
                       placeholder="e.g. 09:00 AM"
@@ -770,7 +1106,18 @@ const Attendance = () => {
                     />
                   </div>
                   <div>
-                    <label style={{ fontSize: 11, fontWeight: 800, color: "#64748b", textTransform: "uppercase", display: "block", marginBottom: 6 }}>Check Out Time</label>
+                    <label
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 800,
+                        color: "#64748b",
+                        textTransform: "uppercase",
+                        display: "block",
+                        marginBottom: 6,
+                      }}
+                    >
+                      Check Out Time
+                    </label>
                     <input
                       type="text"
                       placeholder="e.g. 05:00 PM"
@@ -782,10 +1129,21 @@ const Attendance = () => {
                 </div>
 
                 <div>
-                  <label style={{ fontSize: 11, fontWeight: 800, color: "#64748b", textTransform: "uppercase", display: "block", marginBottom: 6 }}>Remarks / Notes</label>
+                  <label
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 800,
+                      color: "#64748b",
+                      textTransform: "uppercase",
+                      display: "block",
+                      marginBottom: 6,
+                    }}
+                  >
+                    Remarks / Audit Note
+                  </label>
                   <input
                     type="text"
-                    placeholder="e.g. Manual correction by HR"
+                    placeholder="e.g. Adjusted by HR"
                     value={editRemarks}
                     onChange={(e) => setEditRemarks(e.target.value)}
                     className="att-input"
@@ -796,17 +1154,138 @@ const Attendance = () => {
               <div className="att-modal-footer">
                 <button
                   onClick={() => setEditRecordModal(null)}
-                  style={{ padding: "8px 16px", fontSize: 12, fontWeight: 700, color: "#64748b", background: "#f1f5f9", border: "none", borderRadius: 10, cursor: "pointer", fontFamily: "inherit" }}
+                  style={{
+                    padding: "8px 16px",
+                    fontSize: 12,
+                    fontWeight: 700,
+                    color: "#64748b",
+                    background: "#f1f5f9",
+                    border: "none",
+                    borderRadius: 10,
+                    cursor: "pointer",
+                    fontFamily: "inherit",
+                  }}
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleSaveManualAttendance}
-                  style={{ padding: "8px 20px", fontSize: 12, fontWeight: 800, color: "#fff", background: "linear-gradient(135deg, #6366f1, #4f46e5)", border: "none", borderRadius: 10, cursor: "pointer", fontFamily: "inherit" }}
+                  style={{
+                    padding: "8px 20px",
+                    fontSize: 12,
+                    fontWeight: 800,
+                    color: "#fff",
+                    background: "#6366f1",
+                    border: "none",
+                    borderRadius: 10,
+                    cursor: "pointer",
+                    fontFamily: "inherit",
+                  }}
                 >
-                  Save Changes
+                  Save Record
                 </button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── MODAL: CSV MACHINE PUNCH IMPORT ── */}
+        {showImportModal && (
+          <div className="att-modal-overlay" onClick={() => setShowImportModal(false)}>
+            <div className="att-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="att-modal-header">
+                <div>
+                  <h3 style={{ fontSize: 15, fontWeight: 800, color: "#0f172a" }}>Import Machine Punches</h3>
+                  <p style={{ fontSize: 11, color: "#94a3b8", marginTop: 2 }}>
+                    Upload CSV attendance export from biometric machine or attendance software
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowImportModal(false)}
+                  style={{
+                    border: "none",
+                    background: "#f1f5f9",
+                    borderRadius: 8,
+                    padding: 6,
+                    cursor: "pointer",
+                  }}
+                >
+                  <X size={16} color="#64748b" />
+                </button>
+              </div>
+
+              <form onSubmit={handleImportCsv}>
+                <div className="att-modal-body">
+                  <div
+                    style={{
+                      border: "2px dashed #cbd5e1",
+                      borderRadius: 16,
+                      padding: "24px 16px",
+                      textAlign: "center",
+                      background: "#fafbfc",
+                    }}
+                  >
+                    <FileSpreadsheet size={32} color="#6366f1" style={{ margin: "0 auto 8px" }} />
+                    <p style={{ fontSize: 13, fontWeight: 700, color: "#1e293b" }}>Select Attendance CSV File</p>
+                    <p style={{ fontSize: 11, color: "#94a3b8", marginTop: 4 }}>
+                      Columns supported: Employee Code / ID, Date, Time, Punch Type
+                    </p>
+                    <input
+                      type="file"
+                      accept=".csv,text/csv"
+                      onChange={(e) => setImportFile(e.target.files[0])}
+                      style={{ marginTop: 12, fontSize: 12 }}
+                    />
+                  </div>
+
+                  <div style={{ background: "#f8fafc", padding: "12px 16px", borderRadius: 12, border: "1px solid #e2e8f0" }}>
+                    <p style={{ fontSize: 11, fontWeight: 800, color: "#475569", textTransform: "uppercase" }}>
+                      Automatic Deduplication
+                    </p>
+                    <p style={{ fontSize: 11, color: "#64748b", marginTop: 2 }}>
+                      Duplicate punches from the machine will be automatically detected and skipped. Valid records will compute daily attendance without altering finalized past entries.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="att-modal-footer">
+                  <button
+                    type="button"
+                    onClick={() => setShowImportModal(false)}
+                    style={{
+                      padding: "8px 16px",
+                      fontSize: 12,
+                      fontWeight: 700,
+                      color: "#64748b",
+                      background: "#f1f5f9",
+                      border: "none",
+                      borderRadius: 10,
+                      cursor: "pointer",
+                      fontFamily: "inherit",
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={importing || !importFile}
+                    style={{
+                      padding: "8px 20px",
+                      fontSize: 12,
+                      fontWeight: 800,
+                      color: "#fff",
+                      background: "#6366f1",
+                      border: "none",
+                      borderRadius: 10,
+                      cursor: "pointer",
+                      fontFamily: "inherit",
+                      opacity: importing || !importFile ? 0.5 : 1,
+                    }}
+                  >
+                    {importing ? "Processing..." : "Import & Process Punches"}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         )}

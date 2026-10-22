@@ -17,6 +17,8 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { gooeyToast } from "goey-toast";
+import { API_BASE_URL } from "../../config/api.js";
+import { showValidationToast } from "../../utils/formValidationToast.js";
 
 // ─── Design-system styles (mirrors Employees.jsx pattern) ────────────────────
 const styles = `
@@ -266,7 +268,7 @@ const LeaveTypes = () => {
   // ── Data fetching ──────────────────────────────────────────────────────────
   const fetchLeaveTypes = async () => {
     try {
-      const { data } = await axios.get("http://localhost:5000/admin/all-leave-types");
+      const { data } = await axios.get(`${API_BASE_URL}/admin/all-leave-types`);
       if (data.success) setLeaveTypes(data.leave_types || []);
     } catch (err) {
       console.error(err);
@@ -280,16 +282,27 @@ const LeaveTypes = () => {
   // ── Add ───────────────────────────────────────────────────────────────────
   const handleAddSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.type.trim() || !formData.quantity) return;
+    const errs = [];
+    if (!formData.type.trim()) errs.push("Category title is required");
+    if (!formData.quantity || isNaN(formData.quantity) || Number(formData.quantity) < 0) {
+      errs.push("Valid annual allowance in days is required");
+    }
+
+    if (errs.length > 0) {
+      showValidationToast(errs);
+      return;
+    }
+
     setAdding(true);
     try {
-      await axios.post("http://localhost:5000/admin/add-leave-type", formData);
+      await axios.post(`${API_BASE_URL}/admin/add-leave-type`, formData);
       setFormData({ type: "", quantity: "" });
       await fetchLeaveTypes();
       gooeyToast.success("New Leave Type Added", { fillColor: "#FFF", bounce: 0.45, timing: { displayDuration: 2500 } });
     } catch (err) {
       console.error(err);
-      gooeyToast.error("Error adding leave type", { fillColor: "#FFF", bounce: 0.4, timing: { displayDuration: 2500 } });
+      const msg = err.response?.data?.message || "Error adding leave type";
+      showValidationToast([msg]);
     } finally {
       setAdding(false);
     }
@@ -303,11 +316,21 @@ const LeaveTypes = () => {
   };
   const handleEditSubmit = async (e) => {
     e.preventDefault();
-    if (!editingType || !editFormData.type.trim() || !editFormData.quantity) return;
+    const errs = [];
+    if (!editFormData.type.trim()) errs.push("Category title is required");
+    if (!editFormData.quantity || isNaN(editFormData.quantity) || Number(editFormData.quantity) < 0) {
+      errs.push("Valid annual allowance in days is required");
+    }
+
+    if (errs.length > 0) {
+      showValidationToast(errs);
+      return;
+    }
+
     setUpdating(true);
     try {
       const { data } = await axios.put(
-        `http://localhost:5000/admin/update-leave-type/${editingType._id}`, editFormData
+        `${API_BASE_URL}/admin/update-leave-type/${editingType._id}`, editFormData
       );
       if (data.success) {
         setIsEditModalOpen(false); setEditingType(null);
@@ -316,7 +339,8 @@ const LeaveTypes = () => {
       }
     } catch (err) {
       console.error(err);
-      gooeyToast.error("Failed to update leave type", { fillColor: "#FFF", bounce: 0.4, timing: { displayDuration: 2500 } });
+      const msg = err.response?.data?.message || "Failed to update leave type";
+      showValidationToast([msg]);
     } finally {
       setUpdating(false);
     }
@@ -329,7 +353,7 @@ const LeaveTypes = () => {
     setDeleting(true);
     try {
       const { data } = await axios.delete(
-        `http://localhost:5000/admin/delete-leave-type/${deletingType._id}`
+        `${API_BASE_URL}/admin/delete-leave-type/${deletingType._id}`
       );
       if (data.success) {
         setIsDeleteModalOpen(false); setDeletingType(null);

@@ -11,6 +11,8 @@ import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { gooeyToast } from "goey-toast";
 import { z } from "zod";
+import { API_BASE_URL } from "../../config/api.js";
+import { showValidationToast } from "../../utils/formValidationToast.js";
 
 const dfiSchema = z.object({
   dfi_alternate_count: z
@@ -161,12 +163,14 @@ const RaiseDFI = () => {
     const result = dfiSchema.safeParse(formData);
     if (!result.success) {
       const fieldErrors = result.error.flatten().fieldErrors;
-      setErrors(Object.fromEntries(Object.entries(fieldErrors).map(([k, msgs]) => [k, msgs[0]])));
+      const errorMap = Object.fromEntries(Object.entries(fieldErrors).map(([k, msgs]) => [k, msgs[0]]));
+      setErrors(errorMap);
+      showValidationToast(Object.values(errorMap));
       return;
     }
     setErrors({});
     try {
-      const res = await axios.post("http://localhost:5000/user/raise-dfi", formData);
+      const res = await axios.post(`${API_BASE_URL}/user/raise-dfi`, formData);
       gooeyToast.success(res.data.message || "DFI submitted successfully", { fillColor: "#FFF", bounce: 0.45, timing: { displayDuration: 2500 } });
       setFormData(initialFormData);
       setErrors({});

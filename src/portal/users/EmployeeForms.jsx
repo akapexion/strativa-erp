@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import axios from "axios";
+import { API_BASE_URL, getUploadUrl } from "../../config/api.js";
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 const styles = `
@@ -347,8 +348,8 @@ const EmployeeForms = () => {
       const user = JSON.parse(localStorage.getItem("user"));
       const token = localStorage.getItem("token");
       const [submissionsRes, customFormsRes] = await Promise.all([
-        axios.get(`http://localhost:5000/user/current-employee-formsubmissions/${user.user_code}`),
-        axios.get("http://localhost:5000/custom-forms/all-forms", {
+        axios.get(`${API_BASE_URL}/user/current-employee-formsubmissions/${user.user_code}`),
+        axios.get(`${API_BASE_URL}/custom-forms/all-forms`, {
           headers: { Authorization: `Bearer ${token}` }
         })
       ]);

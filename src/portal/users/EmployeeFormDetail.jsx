@@ -19,6 +19,7 @@ import {
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import { gooeyToast } from "goey-toast";
+import { API_BASE_URL, getUploadUrl } from "../../config/api.js";
 
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
@@ -251,11 +252,11 @@ const EmployeeFormDetail = () => {
     setError(null);
     try {
       const baseURL = user.user_role === "user"
-        ? "http://localhost:5000/user/form-submission"
-        : "http://localhost:5000/manager/form-request";
+        ? `${API_BASE_URL}/user/form-submission`
+        : `${API_BASE_URL}/manager/form-request`;
       const [formRes, managersRes] = await Promise.all([
         axios.get(`${baseURL}/${id}`),
-        axios.get("http://localhost:5000/user/all-managers"),
+        axios.get(`${API_BASE_URL}/user/all-managers`),
       ]);
       setFormDetail(formRes.data.formSubmission || formRes.data);
       setAllManagers(managersRes.data.allManagers || []);
@@ -271,7 +272,7 @@ const EmployeeFormDetail = () => {
   const handleAction = async (status) => {
     try {
       const type = getFormType(formDetail.form_title);
-      await axios.put(`http://localhost:5000/manager/action/${type}/${id}`, {
+      await axios.put(`${API_BASE_URL}/manager/action/${type}/${id}`, {
         manager_remarks: remarks, form_status: status, user,
       });
       gooeyToast.success(`Form ${status} successfully`, { fillColor: "#FFF", bounce: 0.45, timing: { displayDuration: 2500 } });
@@ -288,20 +289,24 @@ const EmployeeFormDetail = () => {
   const existingRemarks = formDetail?.manager_remarks || [];
   const currentManagerReview = existingRemarks.find(r => r.manager_id?.toString() === user.user_id?.toString());
 
-  const managers = allManagers.map((manager) => {
-    const remarked = existingRemarks.find(r => r.manager_id?.toString() === manager._id?.toString());
-    return remarked || {
-      manager_name: manager.user_fullname,
-      manager_designation: manager.user_designation,
-      manager_id: manager._id,
-      remark: "", status: null,
-    };
-  }).sort((a, b) => {
-    if (a.date && b.date) return new Date(a.date) - new Date(b.date);
-    if (a.date && !b.date) return -1;
-    if (!a.date && b.date) return 1;
-    return 0;
-  });
+  const managers = (allManagers || [])
+    .filter(Boolean)
+    .map((manager) => {
+      const remarked = existingRemarks.find(r => r?.manager_id?.toString() === manager?._id?.toString());
+      return remarked || {
+        manager_name: manager?.user_fullname || "Manager",
+        manager_designation: manager?.user_designation || "",
+        manager_id: manager?._id,
+        remark: "",
+        status: null,
+      };
+    })
+    .sort((a, b) => {
+      if (a?.date && b?.date) return new Date(a.date) - new Date(b.date);
+      if (a?.date && !b?.date) return -1;
+      if (!a?.date && b?.date) return 1;
+      return 0;
+    });
 
   return (
     <>
@@ -498,8 +503,8 @@ const EmployeeFormDetail = () => {
                             <div style={{ flex: 1 }}>
                               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
                                 <p style={{ fontSize: 13, fontWeight: 800, color: "#0f172a" }}>
-                                  {m.manager_name}
-                                  <span style={{ fontSize: 11, color: "#94a3b8", fontWeight: 600, marginLeft: 6 }}>({m.manager_designation})</span>
+                                  {m?.manager_name || "Manager"}
+                                  <span style={{ fontSize: 11, color: "#94a3b8", fontWeight: 600, marginLeft: 6 }}>({m?.manager_designation || "Reviewer"})</span>
                                 </p>
                                 {m.status ? (
                                   <span className={m.status === "approved" ? "fd-badge fd-badge-approved" : "fd-badge fd-badge-rejected"}>

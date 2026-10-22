@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { API_BASE_URL } from '../../config/api.js';
+import { showValidationToast } from '../../utils/formValidationToast.js';
 import {
   ArrowLeft, Save, User, Briefcase,
   Phone, Mail, Fingerprint, Milestone,
   GraduationCap, Landmark, Banknote, CalendarDays,
   Sparkles, Plus, Trash2, Loader2, ChevronDown, ChevronUp,
-  AlertCircle,
+  AlertCircle, Clock, DollarSign,
 } from 'lucide-react';
 import { gooeyToast } from 'goey-toast';
 import { z } from 'zod';
@@ -27,6 +29,11 @@ const updateEmployeeSchema = z.object({
   employee_designation:  z.string().min(1, "Designation is required"),
   employee_qualification:z.string().min(1, "Qualification is required").max(100),
   employee_salary:       z.string().min(1, "Salary is required").refine(val => !isNaN(Number(val)) && Number(val) > 0, "Salary must be a positive number"),
+  salary_basis:          z.enum(["Monthly", "Hourly"]).optional(),
+  shift_name:            z.string().optional(),
+  shift_start_time:      z.string().optional(),
+  shift_end_time:        z.string().optional(),
+  expected_hours_per_day:z.coerce.string().optional(),
   employee_joiningdate:  z.string().min(1, "Joining date is required"),
   medical_leaves:        z.string().min(1, "Required").refine(val => !isNaN(Number(val)) && Number(val) >= 0, "Must be non-negative"),
   special_leaves:        z.string().min(1, "Required").refine(val => !isNaN(Number(val)) && Number(val) >= 0, "Must be non-negative"),
@@ -40,7 +47,6 @@ const styles = `
   .ue-root * { font-family: 'Plus Jakarta Sans', sans-serif; }
   .ue-root { background: #f8fafc; min-height: 100vh; }
 
-  /* Back button */
   .back-btn {
     display: inline-flex; align-items: center; gap: 7px;
     font-size: 13px; font-weight: 700; color: #64748b;
@@ -51,7 +57,6 @@ const styles = `
   }
   .back-btn:hover { background: #f8fafc; color: #4f46e5; border-color: #c7d2fe; }
 
-  /* Save button */
   .save-btn {
     display: inline-flex; align-items: center; justify-content: center; gap: 8px;
     background: linear-gradient(135deg, #4f46e5, #6366f1);
@@ -71,7 +76,6 @@ const styles = `
   .save-btn:active:not(:disabled) { transform: translateY(0); }
   .save-btn:disabled { opacity: 0.55; cursor: not-allowed; }
 
-  /* Discard button */
   .discard-btn {
     display: inline-flex; align-items: center; gap: 7px;
     font-size: 14px; font-weight: 700; color: #64748b;
@@ -82,7 +86,6 @@ const styles = `
   }
   .discard-btn:hover { background: #f8fafc; border-color: #cbd5e1; color: #475569; }
 
-  /* Section card */
   .section-card {
     background: #fff;
     border: 1px solid #f1f5f9;
@@ -91,7 +94,6 @@ const styles = `
     overflow: hidden;
   }
 
-  /* Section header */
   .section-header {
     display: flex; align-items: center; justify-content: space-between;
     padding: 14px 24px;
@@ -99,147 +101,101 @@ const styles = `
   }
   .section-header-left { display: flex; align-items: center; gap: 10px; }
   .section-header h2 {
-    font-size: 11px; font-weight: 800;
-    color: #000; text-transform: uppercase; letter-spacing: 0.12em; margin: 0;
+    font-size: 13.5px; font-weight: 800; color: #1e293b;
+    letter-spacing: -0.01em; margin: 0;
   }
 
-  /* Form grid */
-  .form-grid {
+  .field-grid-3 {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 20px;
-    padding: 24px;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 16px; padding: 22px 24px;
   }
 
-  /* Field wrapper */
-  .field-wrap { display: flex; flex-direction: column; }
+  .field-wrap { display: flex; flex-direction: column; gap: 5px; }
 
-  /* Field label */
   .field-label {
+    font-size: 10.5px; font-weight: 800; color: #94a3b8;
+    text-transform: uppercase; letter-spacing: 0.08em;
     display: flex; align-items: center; gap: 5px;
-    font-size: 10px; font-weight: 800;
-    color: #94a3b8; text-transform: uppercase; letter-spacing: 0.1em;
-    margin-bottom: 6px;
   }
 
-  /* Form input */
   .form-input {
     font-family: 'Plus Jakarta Sans', sans-serif;
-    width: 100%; padding: 10px 14px;
-    border-radius: 10px;
-    border: 1.5px solid #e8ecf0;
-    outline: none; font-size: 13px; font-weight: 500; color: #1e293b;
-    background: #fafbfc;
-    transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+    font-size: 13px; font-weight: 600; color: #1e293b;
+    background: #f8fafc; border: 1.5px solid #e8ecf0;
+    border-radius: 10px; padding: 9px 13px;
+    outline: none; transition: all 0.15s; width: 100%;
     box-sizing: border-box;
   }
-  .form-input::placeholder { color: #c0cad6; }
   .form-input:focus {
-    border-color: #6366f1;
+    background: #fff; border-color: #6366f1;
     box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
-    background: #fff;
   }
-  .form-input.error {
-    border-color: #f43f5e;
-    background: #fff1f2;
-  }
-  .form-input.error:focus {
-    box-shadow: 0 0 0 3px rgba(244,63,94,0.1);
-  }
-  .form-input.emerald:focus {
-    border-color: #10b981;
-    box-shadow: 0 0 0 3px rgba(16,185,129,0.1);
-  }
-
-  /* Error message */
+  .form-input.error { border-color: #f87171; background: #fff8f8; }
   .field-error {
-    font-size: 11px; font-weight: 600; color: #f43f5e;
-    margin-top: 5px; display: flex; align-items: center; gap: 4px;
+    font-size: 11px; font-weight: 700; color: #ef4444;
+    display: flex; align-items: center; gap: 4px;
   }
 
-  /* Status select */
   .status-select {
     font-family: 'Plus Jakarta Sans', sans-serif;
-    width: 100%; padding: 10px 14px;
-    border-radius: 10px; border: 1.5px solid #e8ecf0;
-    outline: none; font-size: 13px; font-weight: 600; color: #1e293b;
-    background: #fafbfc; cursor: pointer;
-    transition: border-color 0.15s, box-shadow 0.15s;
-    box-sizing: border-box; appearance: none;
+    font-size: 13px; font-weight: 700;
+    background: #f8fafc; border: 1.5px solid #e8ecf0;
+    border-radius: 10px; padding: 9px 13px;
+    outline: none; cursor: pointer; transition: all 0.15s;
+    width: 100%; box-sizing: border-box; color: #1e293b;
   }
-  .status-select:focus {
-    border-color: #10b981;
-    box-shadow: 0 0 0 3px rgba(16,185,129,0.1);
-    background: #fff;
-  }
+  .status-select:focus { border-color: #6366f1; background: #fff; }
 
-  /* Allotment card */
   .allot-card {
     display: flex; align-items: center; justify-content: space-between;
-    padding: 14px 16px;
-    background: #fafbfc; border: 1.5px solid #f1f5f9;
-    border-radius: 12px;
-    transition: border-color 0.12s, box-shadow 0.12s;
+    padding: 12px 16px; border: 1.5px solid #e8eeff;
+    border-radius: 12px; background: #f9f8ff;
+    transition: all 0.15s;
   }
-  .allot-card:hover { border-color: #c7d2fe; box-shadow: 0 2px 8px rgba(99,102,241,0.07); }
-
-  /* Remove allotment button */
+  .allot-card:hover { border-color: #c7d2fe; box-shadow: 0 2px 8px rgba(99,102,241,0.08); }
   .remove-allot-btn {
-    padding: 6px; border-radius: 8px; border: none;
-    background: #f8fafc; color: #94a3b8; cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    transition: background 0.12s, color 0.12s;
+    background: none; border: none; cursor: pointer;
+    color: #94a3b8; padding: 5px; border-radius: 7px;
+    display: flex; align-items: center; transition: all 0.12s;
   }
-  .remove-allot-btn:hover { background: #fff1f2; color: #f43f5e; }
+  .remove-allot-btn:hover { background: #fee2e2; color: #ef4444; }
 
-  /* Allot leave button */
   .allot-btn {
-    width: 100%; padding: 10px 16px;
-    background: linear-gradient(135deg, #4f46e5, #6366f1);
-    border: none; border-radius: 10px;
-    color: #fff; font-weight: 700; font-size: 13px;
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    font-size: 12px; font-weight: 700; color: #fff;
+    background: #6366f1; border: none; border-radius: 9px;
+    padding: 8px 14px; cursor: pointer; transition: all 0.15s;
     font-family: 'Plus Jakarta Sans', sans-serif;
-    display: flex; align-items: center; justify-content: center; gap: 6px;
-    cursor: pointer; transition: filter 0.15s, transform 0.15s;
-    box-shadow: 0 4px 12px rgba(99,102,241,0.22);
   }
-  .allot-btn:hover { filter: brightness(1.08); transform: translateY(-1px); }
-  .allot-btn:active { transform: translateY(0); }
+  .allot-btn:hover { background: #4f46e5; }
 
-  /* Toggle collapse button */
   .toggle-btn {
-    display: flex; align-items: center; gap: 6px;
-    font-size: 11px; font-weight: 700;
-    color: #a5b4fc; background: rgba(255,255,255,0.07);
-    border: 1px solid rgba(165,180,252,0.25);
-    border-radius: 8px; padding: 6px 12px;
-    cursor: pointer; transition: all 0.15s;
-    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 12px; font-weight: 700; color: #6366f1;
+    background: #eef2ff; border: 1.5px solid #c7d2fe;
+    border-radius: 8px; padding: 6px 12px; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 5px;
+    transition: all 0.15s; font-family: 'Plus Jakarta Sans', sans-serif;
   }
-  .toggle-btn:hover { background: rgba(255,255,255,0.12); color: #fff; }
+  .toggle-btn:hover { background: #e0e7ff; }
 
-  /* Spinner */
-  @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-  .spin { animation: spin 1s linear infinite; }
-
-  /* Loading screen */
   .loading-screen {
-    min-height: 100vh; display: flex; align-items: center; justify-content: center;
-    background: #f8fafc;
+    min-height: 80vh; display: flex; align-items: center; justify-content: center;
   }
   .loading-box {
     display: flex; flex-direction: column; align-items: center; gap: 14px;
+    padding: 32px 40px; background: #fff; border-radius: 20px;
+    border: 1px solid #f1f5f9; box-shadow: 0 4px 20px rgba(0,0,0,0.06);
   }
   .loading-ring {
-    width: 44px; height: 44px;
-    border: 3px solid #e0e7ff;
-    border-top-color: #4f46e5;
-    border-radius: 50%;
-    animation: spin 0.9s linear infinite;
+    width: 36px; height: 36px; border: 3.5px solid #e2e8f0;
+    border-top-color: #6366f1; border-radius: 50%;
+    animation: spin 0.75s linear infinite;
   }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spin { animation: spin 0.75s linear infinite; }
 `;
 
-// ─── Status badge colours ─────────────────────────────────────────────────────
 const STATUS_COLORS = {
   Permanent:  { bg: "#f0fdf4", color: "#15803d" },
   Probation:  { bg: "#fffbeb", color: "#b45309" },
@@ -272,17 +228,26 @@ const UpdateEmployee = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const typesRes = await axios.get("http://localhost:5000/admin/all-leave-types");
+        const typesRes = await axios.get(`${API_BASE_URL}/admin/all-leave-types`);
         let leaveTypesList = [];
         if (typesRes.data?.success) {
           leaveTypesList = typesRes.data.leave_types || [];
           setConfiguredLeaveTypes(leaveTypesList);
         }
-        const empRes = await axios.get(`http://localhost:5000/admin/employee/${id}`);
+        const empRes = await axios.get(`${API_BASE_URL}/admin/employee/${id}`);
         if (empRes.data.success) {
           const emp = empRes.data.employee;
           setFormData({
             ...emp,
+            salary_basis: emp.salary_basis || "Monthly",
+            shift_name: emp.assigned_shift?.shift_name || "Standard Morning",
+            shift_start_time: emp.assigned_shift?.start_time || "09:00 AM",
+            shift_end_time: emp.assigned_shift?.end_time || "05:00 PM",
+            expected_hours_per_day: emp.assigned_shift?.expected_hours_per_day?.toString() || "8.0",
+            bank_name: emp.bank_details?.bank_name || "",
+            account_title: emp.bank_details?.account_title || "",
+            account_number: emp.bank_details?.account_number || "",
+            iban: emp.bank_details?.iban || "",
             medical_leaves: emp.alloted_leaves?.medical_leaves?.toString() || "0",
             special_leaves: emp.alloted_leaves?.special_leaves?.toString() || "0",
             employment_status: emp.employment_status || "Probation",
@@ -357,7 +322,9 @@ const UpdateEmployee = () => {
     const result = updateEmployeeSchema.safeParse(formData);
     if (!result.success) {
       const fe = result.error.flatten().fieldErrors;
-      setErrors(Object.fromEntries(Object.entries(fe).map(([k, v]) => [k, v[0]])));
+      const errorMap = Object.fromEntries(Object.entries(fe).map(([k, v]) => [k, v[0]]));
+      setErrors(errorMap);
+      showValidationToast(Object.values(errorMap));
       return;
     }
     setErrors({});
@@ -367,6 +334,19 @@ const UpdateEmployee = () => {
       customAllotments.forEach(a => { customObj[a.key] = a.quantity; });
       const payload = {
         ...formData,
+        salary_basis: formData.salary_basis || "Monthly",
+        assigned_shift: {
+          shift_name: formData.shift_name || "Standard Morning",
+          start_time: formData.shift_start_time || "09:00 AM",
+          end_time: formData.shift_end_time || "05:00 PM",
+          expected_hours_per_day: Number(formData.expected_hours_per_day) || 8.0,
+        },
+        bank_details: {
+          bank_name: formData.bank_name || "",
+          account_title: formData.account_title || "",
+          account_number: formData.account_number || "",
+          iban: formData.iban || "",
+        },
         alloted_leaves: {
           causual_leaves: formData.alloted_leaves?.causual_leaves || 0,
           medical_leaves: Number(formData.medical_leaves || 0),
@@ -375,14 +355,15 @@ const UpdateEmployee = () => {
           ...customObj,
         },
       };
-      const { data } = await axios.put(`http://localhost:5000/admin/update-employee/${id}`, payload);
+      const { data } = await axios.put(`${API_BASE_URL}/admin/update-employee/${id}`, payload);
       if (data.success) {
         gooeyToast.success("Employee Updated Successfully", { fillColor: "#FFF", bounce: 0.45, timing: { displayDuration: 2500 } });
-        navigate('/hr360/admin/employees');
+        navigate(-1);
       }
     } catch (err) {
       console.error(err);
-      gooeyToast.error("Update failed. Please try again.", { fillColor: "#FFF", bounce: 0.45, timing: { displayDuration: 2500 } });
+      const errMsg = err.response?.data?.message || "Update failed. Please try again.";
+      showValidationToast([errMsg]);
     } finally {
       setIsUpdating(false);
     }
@@ -390,7 +371,6 @@ const UpdateEmployee = () => {
 
   const fmt = (d) => d ? d.split('T')[0] : "";
 
-  // ── Loading screen ─────────────────────────────────────────────────────────
   if (loading) return (
     <>
       <style>{styles}</style>
@@ -418,125 +398,154 @@ const UpdateEmployee = () => {
             <button className="back-btn" onClick={() => navigate(-1)}>
               <ArrowLeft size={15} /> Back to Directory
             </button>
-            <div style={{ textAlign: "right" }}>
-              <h1 style={{ fontSize: 22, fontWeight: 900, color: "#0f172a", letterSpacing: "-0.03em", margin: 0 }}>
-                Update Profile
-              </h1>
-              <p style={{
-                margin: "4px 0 0",
-                fontSize: 11, fontWeight: 800,
-                fontFamily: "monospace",
-                letterSpacing: "0.1em",
-                color: "#6366f1",
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <span style={{
+                fontSize: 11, fontWeight: 800, padding: "4px 12px",
+                borderRadius: 99, background: statusColor.bg, color: statusColor.color,
+                letterSpacing: "0.04em", textTransform: "uppercase",
               }}>
+                {formData.employment_status || "Probation"}
+              </span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: "#94a3b8", fontFamily: "monospace" }}>
                 {formData.employee_code}
-              </p>
+              </span>
             </div>
           </div>
 
           <form onSubmit={handleUpdateSubmit} className="space-y-5">
 
-            {/* ── Personal Information ── */}
+            {/* ── Personal Info ── */}
             <div className="section-card">
               <div className="section-header">
                 <div className="section-header-left">
                   <div style={{ padding: 6, borderRadius: 8 }}>
-                    <User size={16} style={{ color: "#60a5fa" }} />
+                    <User size={16} style={{ color: "#3b82f6" }} />
                   </div>
                   <h2>Personal Information</h2>
                 </div>
               </div>
-              <div className="form-grid">
-                {[
-                  { label: "First Name",      name: "employee_fname",          icon: <User size={12}/> },
-                  { label: "Last Name",       name: "employee_lname",          icon: <User size={12}/> },
-                  { label: "Email Address",   name: "employee_email",          type: "email", icon: <Mail size={12}/> },
-                  { label: "Phone Number",    name: "employee_phonenumber",    icon: <Phone size={12}/> },
-                  { label: "CNIC Number",     name: "employee_cnicnumber",     icon: <Fingerprint size={12}/> },
-                  { label: "Marital Status",  name: "employee_maritalstatus",  icon: <Milestone size={12}/> },
-                  { label: "Date of Birth",   name: "employee_dob",            type: "date", icon: <CalendarDays size={12}/> },
-                ].map(({ label, name, type = "text", icon }) => (
-                  <div className="field-wrap" key={name}>
-                    <label className="field-label">{icon}{label}</label>
-                    <input
-                      type={type}
-                      name={name}
-                      value={type === "date" ? fmt(formData[name]) : (formData[name] || "")}
-                      onChange={handleChange}
-                      className={`form-input${errors[name] ? " error" : ""}`}
-                    />
-                    {errors[name] && (
-                      <span className="field-error"><AlertCircle size={10}/>{errors[name]}</span>
-                    )}
-                  </div>
-                ))}
+              <div className="field-grid-3">
+                <div className="field-wrap">
+                  <label className="field-label">First Name</label>
+                  <input type="text" name="employee_fname"
+                    value={formData.employee_fname || ""} onChange={handleChange}
+                    className={`form-input${errors.employee_fname ? " error" : ""}`}
+                  />
+                  {errors.employee_fname && <span className="field-error"><AlertCircle size={10}/>{errors.employee_fname}</span>}
+                </div>
+                <div className="field-wrap">
+                  <label className="field-label">Last Name</label>
+                  <input type="text" name="employee_lname"
+                    value={formData.employee_lname || ""} onChange={handleChange}
+                    className={`form-input${errors.employee_lname ? " error" : ""}`}
+                  />
+                  {errors.employee_lname && <span className="field-error"><AlertCircle size={10}/>{errors.employee_lname}</span>}
+                </div>
+                <div className="field-wrap">
+                  <label className="field-label"><Mail size={12}/> Email Address</label>
+                  <input type="email" name="employee_email"
+                    value={formData.employee_email || ""} onChange={handleChange}
+                    className={`form-input${errors.employee_email ? " error" : ""}`}
+                  />
+                  {errors.employee_email && <span className="field-error"><AlertCircle size={10}/>{errors.employee_email}</span>}
+                </div>
+                <div className="field-wrap">
+                  <label className="field-label"><Phone size={12}/> Phone Number</label>
+                  <input type="text" name="employee_phonenumber"
+                    value={formData.employee_phonenumber || ""} onChange={handleChange}
+                    className={`form-input${errors.employee_phonenumber ? " error" : ""}`}
+                  />
+                  {errors.employee_phonenumber && <span className="field-error"><AlertCircle size={10}/>{errors.employee_phonenumber}</span>}
+                </div>
+                <div className="field-wrap">
+                  <label className="field-label"><Fingerprint size={12}/> CNIC (13 Digits)</label>
+                  <input type="text" name="employee_cnicnumber"
+                    value={formData.employee_cnicnumber || ""} onChange={handleChange}
+                    className={`form-input${errors.employee_cnicnumber ? " error" : ""}`}
+                  />
+                  {errors.employee_cnicnumber && <span className="field-error"><AlertCircle size={10}/>{errors.employee_cnicnumber}</span>}
+                </div>
+                <div className="field-wrap">
+                  <label className="field-label">Date of Birth</label>
+                  <input type="date" name="employee_dob"
+                    value={fmt(formData.employee_dob)} onChange={handleChange}
+                    className={`form-input${errors.employee_dob ? " error" : ""}`}
+                  />
+                  {errors.employee_dob && <span className="field-error"><AlertCircle size={10}/>{errors.employee_dob}</span>}
+                </div>
+                <div className="field-wrap">
+                  <label className="field-label">Marital Status</label>
+                  <select name="employee_maritalstatus"
+                    value={formData.employee_maritalstatus || "Single"} onChange={handleChange}
+                    className="status-select"
+                  >
+                    <option value="Single">Single</option>
+                    <option value="Married">Married</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
               </div>
             </div>
 
-            {/* ── Employment Details ── */}
+            {/* ── Professional & Employment ── */}
             <div className="section-card">
               <div className="section-header">
                 <div className="section-header-left">
                   <div style={{ padding: 6, borderRadius: 8 }}>
-                    <Briefcase size={16} style={{ color: "#34d399" }} />
+                    <Briefcase size={16} style={{ color: "#7c3aed" }} />
                   </div>
-                  <h2>Employment Details</h2>
+                  <h2>Professional &amp; Employment Details</h2>
                 </div>
-                {/* Live status pill */}
-                <span style={{
-                  fontSize: 10, fontWeight: 800, textTransform: "uppercase",
-                  letterSpacing: "0.08em", padding: "3px 10px",
-                  background: statusColor.bg, color: statusColor.color,
-                  borderRadius: 99, border: `1px solid ${statusColor.color}22`,
-                }}>
-                  {formData.employment_status}
-                </span>
               </div>
-              <div className="form-grid">
-                {[
-                  { label: "Department",      name: "employee_department",       icon: <Landmark size={12}/> },
-                  { label: "Designation",     name: "employee_designation",      icon: <Briefcase size={12}/> },
-                  { label: "Qualification",   name: "employee_qualification",    icon: <GraduationCap size={12}/> },
-                  { label: "Salary Package",  name: "employee_salary",           icon: <Banknote size={12}/> },
-                  { label: "Previous Org",    name: "employee_lastorganization", icon: <Milestone size={12}/> },
-                  { label: "Joining Date",    name: "employee_joiningdate",      type: "date", icon: <CalendarDays size={12}/> },
-                ].map(({ label, name, type = "text", icon }) => (
-                  <div className="field-wrap" key={name}>
-                    <label className="field-label">{icon}{label}</label>
-                    <input
-                      type={type}
-                      name={name}
-                      value={type === "date" ? fmt(formData[name]) : (formData[name] || "")}
-                      onChange={handleChange}
-                      className={`form-input emerald${errors[name] ? " error" : ""}`}
-                    />
-                    {errors[name] && (
-                      <span className="field-error"><AlertCircle size={10}/>{errors[name]}</span>
-                    )}
-                  </div>
-                ))}
-
-                {/* Medical Leaves */}
+              <div className="field-grid-3">
+                <div className="field-wrap">
+                  <label className="field-label"><Milestone size={12}/> Department</label>
+                  <input type="text" name="employee_department"
+                    value={formData.employee_department || ""} onChange={handleChange}
+                    className={`form-input${errors.employee_department ? " error" : ""}`}
+                  />
+                  {errors.employee_department && <span className="field-error"><AlertCircle size={10}/>{errors.employee_department}</span>}
+                </div>
+                <div className="field-wrap">
+                  <label className="field-label"><Briefcase size={12}/> Designation</label>
+                  <input type="text" name="employee_designation"
+                    value={formData.employee_designation || ""} onChange={handleChange}
+                    className={`form-input${errors.employee_designation ? " error" : ""}`}
+                  />
+                  {errors.employee_designation && <span className="field-error"><AlertCircle size={10}/>{errors.employee_designation}</span>}
+                </div>
+                <div className="field-wrap">
+                  <label className="field-label"><GraduationCap size={12}/> Qualification</label>
+                  <input type="text" name="employee_qualification"
+                    value={formData.employee_qualification || ""} onChange={handleChange}
+                    className={`form-input${errors.employee_qualification ? " error" : ""}`}
+                  />
+                  {errors.employee_qualification && <span className="field-error"><AlertCircle size={10}/>{errors.employee_qualification}</span>}
+                </div>
+                <div className="field-wrap">
+                  <label className="field-label"><CalendarDays size={12}/> Joining Date</label>
+                  <input type="date" name="employee_joiningdate"
+                    value={fmt(formData.employee_joiningdate)} onChange={handleChange}
+                    className={`form-input${errors.employee_joiningdate ? " error" : ""}`}
+                  />
+                  {errors.employee_joiningdate && <span className="field-error"><AlertCircle size={10}/>{errors.employee_joiningdate}</span>}
+                </div>
                 <div className="field-wrap">
                   <label className="field-label"><CalendarDays size={12}/>Medical Leaves</label>
                   <input type="number" name="medical_leaves"
                     value={formData.medical_leaves || "0"} onChange={handleChange}
-                    className={`form-input emerald${errors.medical_leaves ? " error" : ""}`}
+                    className={`form-input${errors.medical_leaves ? " error" : ""}`}
                   />
                   {errors.medical_leaves && <span className="field-error"><AlertCircle size={10}/>{errors.medical_leaves}</span>}
                 </div>
-
-                {/* Special Leaves */}
                 <div className="field-wrap">
                   <label className="field-label"><CalendarDays size={12}/>Special Leaves</label>
                   <input type="number" name="special_leaves"
                     value={formData.special_leaves || "0"} onChange={handleChange}
-                    className={`form-input emerald${errors.special_leaves ? " error" : ""}`}
+                    className={`form-input${errors.special_leaves ? " error" : ""}`}
                   />
                   {errors.special_leaves && <span className="field-error"><AlertCircle size={10}/>{errors.special_leaves}</span>}
                 </div>
-
-                {/* Employment Status */}
                 <div className="field-wrap">
                   <label className="field-label"><User size={12}/>Employment Status</label>
                   <select
@@ -550,6 +559,113 @@ const UpdateEmployee = () => {
                     <option value="Terminated">Terminated</option>
                     <option value="Ex">Ex</option>
                   </select>
+                </div>
+              </div>
+            </div>
+
+            {/* ── Shift & Compensation ── */}
+            <div className="section-card">
+              <div className="section-header">
+                <div className="section-header-left">
+                  <div style={{ padding: 6, borderRadius: 8 }}>
+                    <Clock size={16} style={{ color: "#f59e0b" }} />
+                  </div>
+                  <h2>Shift & Compensation Settings</h2>
+                </div>
+              </div>
+              <div className="field-grid-3">
+                <div className="field-wrap">
+                  <label className="field-label">Salary Basis</label>
+                  <select
+                    name="salary_basis"
+                    value={formData.salary_basis || "Monthly"}
+                    onChange={handleChange}
+                    className="status-select"
+                  >
+                    <option value="Monthly">Monthly Fixed Salary</option>
+                    <option value="Hourly">Hourly Basis</option>
+                  </select>
+                </div>
+                <div className="field-wrap">
+                  <label className="field-label"><Banknote size={12}/> Salary Amount (PKR)</label>
+                  <input type="number" name="employee_salary"
+                    value={formData.employee_salary || "0"} onChange={handleChange}
+                    className={`form-input${errors.employee_salary ? " error" : ""}`}
+                    style={{ fontFamily: "monospace" }}
+                  />
+                  {errors.employee_salary && <span className="field-error"><AlertCircle size={10}/>{errors.employee_salary}</span>}
+                </div>
+                <div className="field-wrap">
+                  <label className="field-label"><Clock size={12}/> Shift Name</label>
+                  <input type="text" name="shift_name"
+                    value={formData.shift_name || "Standard Morning"} onChange={handleChange}
+                    className="form-input"
+                  />
+                </div>
+                <div className="field-wrap">
+                  <label className="field-label">Expected Daily Hours</label>
+                  <input type="number" step="0.5" name="expected_hours_per_day"
+                    value={formData.expected_hours_per_day || "8.0"} onChange={handleChange}
+                    className="form-input"
+                  />
+                </div>
+                <div className="field-wrap">
+                  <label className="field-label">Shift Start Time</label>
+                  <input type="text" name="shift_start_time"
+                    value={formData.shift_start_time || "09:00 AM"} onChange={handleChange}
+                    className="form-input"
+                  />
+                </div>
+                <div className="field-wrap">
+                  <label className="field-label">Shift End Time</label>
+                  <input type="text" name="shift_end_time"
+                    value={formData.shift_end_time || "05:00 PM"} onChange={handleChange}
+                    className="form-input"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* ── Bank & Disbursement Details ── */}
+            <div className="section-card">
+              <div className="section-header">
+                <div className="section-header-left">
+                  <div style={{ padding: 6, borderRadius: 8 }}>
+                    <Landmark size={16} style={{ color: "#10b981" }} />
+                  </div>
+                  <h2>Bank &amp; Disbursement Details</h2>
+                </div>
+              </div>
+              <div className="field-grid-3">
+                <div className="field-wrap">
+                  <label className="field-label">Bank Name</label>
+                  <input type="text" name="bank_name"
+                    value={formData.bank_name || ""} onChange={handleChange}
+                    className="form-input"
+                  />
+                </div>
+                <div className="field-wrap">
+                  <label className="field-label">Account Title</label>
+                  <input type="text" name="account_title"
+                    value={formData.account_title || ""} onChange={handleChange}
+                    className="form-input"
+                  />
+                </div>
+                <div className="field-wrap">
+                  <label className="field-label">Account Number</label>
+                  <input type="text" name="account_number"
+                    value={formData.account_number || ""} onChange={handleChange}
+                    className="form-input"
+                    style={{ fontFamily: "monospace" }}
+                  />
+                </div>
+                <div className="field-wrap">
+                  <label className="field-label">IBAN</label>
+                  <input type="text" name="iban"
+                    value={formData.iban || ""} onChange={handleChange}
+                    className="form-input"
+                    style={{ fontFamily: "monospace" }}
+                  />
                 </div>
               </div>
             </div>
@@ -575,7 +691,6 @@ const UpdateEmployee = () => {
                   Manage custom leave categories allotted to this employee.
                 </p>
 
-                {/* Allotment cards */}
                 {customAllotments.length > 0 ? (
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 12 }}>
                     {customAllotments.map(a => (
@@ -612,7 +727,6 @@ const UpdateEmployee = () => {
                   </div>
                 )}
 
-                {/* Collapsible builder */}
                 {isSectionOpen && (
                   <div style={{
                     padding: 18, background: "#fafbff",

@@ -3,6 +3,8 @@ import { ArrowLeft, Save, FileEdit, Plus, Trash2, ArrowUp, ArrowDown, Settings, 
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import { gooeyToast } from 'goey-toast';
+import { API_BASE_URL } from '../../config/api.js';
+import { showValidationToast } from '../../utils/formValidationToast.js';
 
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
@@ -140,7 +142,7 @@ const AddForm = () => {
       const fetchForm = async () => {
         try {
           const token = localStorage.getItem("token");
-          const res = await axios.get(`http://localhost:5000/custom-forms/${formId}`, {
+          const res = await axios.get(`${API_BASE_URL}/custom-forms/${formId}`, {
             headers: { Authorization: `Bearer ${token}` }
           });
           if (res.data?.success && res.data.data) {
@@ -226,40 +228,22 @@ const AddForm = () => {
   };
 
   const handlePublish = async () => {
-    if (!formTitle.trim() || !targetRole) {
-      return gooeyToast.error("Please fill in both the title and the target audience", {
-        fillColor: "#FFF",
-        bounce: 0.45,
-        timing: { displayDuration: 2500 }
-      });
-    }
-
-    if (fields.length === 0) {
-      return gooeyToast.error("Please add at least one field to your form", {
-        fillColor: "#FFF",
-        bounce: 0.45,
-        timing: { displayDuration: 2500 }
-      });
-    }
+    const valErrors = [];
+    if (!formTitle.trim()) valErrors.push("Form title is required");
+    if (!targetRole) valErrors.push("Target audience/department is required");
+    if (fields.length === 0) valErrors.push("Please add at least one field to your form");
 
     // Validate that all fields have labels
     const hasEmptyLabels = fields.some(f => !f.field_label.trim());
-    if (hasEmptyLabels) {
-      return gooeyToast.error("Please enter labels for all form fields", {
-        fillColor: "#FFF",
-        bounce: 0.45,
-        timing: { displayDuration: 2500 }
-      });
-    }
+    if (hasEmptyLabels) valErrors.push("Please enter labels for all form fields");
 
     // Validate dropdowns have options
     const hasEmptyDropdowns = fields.some(f => f.field_type === 'select' && f.field_options.length === 0);
-    if (hasEmptyDropdowns) {
-      return gooeyToast.error("Dropdown fields must have at least one option", {
-        fillColor: "#FFF",
-        bounce: 0.45,
-        timing: { displayDuration: 2500 }
-      });
+    if (hasEmptyDropdowns) valErrors.push("Dropdown fields must have at least one option");
+
+    if (valErrors.length > 0) {
+      showValidationToast(valErrors);
+      return;
     }
 
     const payload = {
@@ -276,8 +260,8 @@ const AddForm = () => {
     try {
       const token = localStorage.getItem("token");
       const url = formId
-        ? `http://localhost:5000/custom-forms/${formId}`
-        : "http://localhost:5000/custom-forms/add-form";
+        ? `${API_BASE_URL}/custom-forms/${formId}`
+        : `${API_BASE_URL}/custom-forms/add-form`;
       const method = formId ? "put" : "post";
 
       const res = await axios[method](url, payload, {

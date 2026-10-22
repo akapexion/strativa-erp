@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
+import { API_BASE_URL, getUploadUrl } from "../../config/api.js";
 
 // ─── Styles (mirroring AddEmployee design language) ───────────────────────────
 const styles = `
@@ -321,7 +322,7 @@ const FormRequests = () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await axios.get("http://localhost:5000/manager/form-requests");
+      const res = await axios.get(`${API_BASE_URL}/manager/form-requests`);
       const data = res.data.AllFormSubmissions || res.data || [];
       setRequests(data);
     } catch (err) {

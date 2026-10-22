@@ -13,6 +13,8 @@ import {
 import { Link, useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import { gooeyToast } from "goey-toast";
+import { API_BASE_URL } from "../../config/api.js";
+import { showValidationToast } from "../../utils/formValidationToast.js";
 
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
@@ -181,7 +183,7 @@ const RaiseCustomForm = () => {
     setFetchError(null);
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.get(`http://localhost:5000/custom-forms/${formId}`, {
+      const res = await axios.get(`${API_BASE_URL}/custom-forms/${formId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.data?.success && res.data.data) {
@@ -240,16 +242,14 @@ const RaiseCustomForm = () => {
     });
 
     setErrors(newErrors);
+    if (!isValid) {
+      showValidationToast(Object.values(newErrors));
+    }
     return isValid;
   };
 
   const handleSubmit = async () => {
     if (!validateForm()) {
-      gooeyToast.error("Please fill in all required form fields correctly", {
-        fillColor: "#FFF",
-        bounce: 0.45,
-        timing: { displayDuration: 2500 },
-      });
       return;
     }
 
@@ -263,7 +263,7 @@ const RaiseCustomForm = () => {
         answers,
       };
 
-      const res = await axios.post("http://localhost:5000/custom-forms/submit", payload, {
+      const res = await axios.post(`${API_BASE_URL}/custom-forms/submit`, payload, {
         headers: { Authorization: `Bearer ${token}` }
       });
 

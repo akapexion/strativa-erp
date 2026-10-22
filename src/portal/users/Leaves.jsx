@@ -13,6 +13,7 @@ import {
 import axios from "axios";
 import { gooeyToast } from "goey-toast";
 import { API_BASE_URL, getUploadUrl } from "../../config/api.js";
+import { showValidationToast } from "../../utils/formValidationToast.js";
 
 const Leaves = () => {
   const user = JSON.parse(localStorage.getItem("user"));
@@ -29,6 +30,7 @@ const Leaves = () => {
     leave_to: "",
     leave_reason: "",
   });
+  const [errors, setErrors] = useState({});
 
   // ── Status styles ──
   const getStatusStyles = (status) => {
@@ -77,24 +79,25 @@ const Leaves = () => {
 
   // ── Submit leave ──
   const handleSubmit = async () => {
-    if (!form.leave_type || !form.leave_from || !form.leave_to || !form.leave_reason.trim()) {
-      gooeyToast.error("Please fill in all fields.", {
-        fillColor: "#FFF", bounce: 0.45, timing: { displayDuration: 2500 },
-      });
-      return;
+    const errs = {};
+    if (!form.leave_type) errs.leave_type = "Please select a leave type";
+    if (!form.leave_from) errs.leave_from = "Leave start date is required";
+    if (!form.leave_to) errs.leave_to = "Leave end date is required";
+    if (!form.leave_reason.trim()) errs.leave_reason = "Reason for leave is required";
+    if (form.leave_from && form.leave_to && calcDays() <= 0) {
+      errs.leave_to = "End date cannot be before start date";
     }
     if (form.leave_type === "medical_leaves" && !prescriptionFile) {
-      gooeyToast.error("Medical prescription is required for medical leaves.", {
-        fillColor: "#FFF", bounce: 0.45, timing: { displayDuration: 2500 },
-      });
+      errs.prescription = "Medical prescription is required for medical leaves";
+    }
+
+    if (Object.keys(errs).length > 0) {
+      setErrors(errs);
+      showValidationToast(Object.values(errs));
       return;
     }
-    if (calcDays() <= 0) {
-      gooeyToast.error("End date cannot be before start date.", {
-        fillColor: "#FFF", bounce: 0.45, timing: { displayDuration: 2500 },
-      });
-      return;
-    }
+
+    setErrors({});
 
     setSubmitting(true);
     try {
@@ -327,8 +330,13 @@ const Leaves = () => {
                   </label>
                   <select
                     value={form.leave_type}
-                    onChange={(e) => setForm({ ...form, leave_type: e.target.value })}
-                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white cursor-pointer"
+                    onChange={(e) => {
+                      setErrors((p) => ({ ...p, leave_type: undefined }));
+                      setForm({ ...form, leave_type: e.target.value });
+                    }}
+                    className={`w-full px-4 py-2.5 rounded-xl border text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white cursor-pointer ${
+                      errors.leave_type ? "border-red-400 bg-red-50/50" : "border-gray-200"
+                    }`}
                   >
                     <option value="">— Select leave type —</option>
                     {flatLeaveTypes.map((t) => (
@@ -337,6 +345,9 @@ const Leaves = () => {
                       </option>
                     ))}
                   </select>
+                  {errors.leave_type && (
+                    <p className="text-xs text-red-500 font-semibold mt-1">⚠ {errors.leave_type}</p>
+                  )}
                 </div>
 
                 {/* Dates */}
@@ -348,9 +359,17 @@ const Leaves = () => {
                     <input
                       type="date"
                       value={form.leave_from}
-                      onChange={(e) => setForm({ ...form, leave_from: e.target.value })}
-                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                      onChange={(e) => {
+                        setErrors((p) => ({ ...p, leave_from: undefined }));
+                        setForm({ ...form, leave_from: e.target.value });
+                      }}
+                      className={`w-full px-4 py-2.5 rounded-xl border text-sm focus:ring-2 focus:ring-blue-500 outline-none ${
+                        errors.leave_from ? "border-red-400 bg-red-50/50" : "border-gray-200"
+                      }`}
                     />
+                    {errors.leave_from && (
+                      <p className="text-xs text-red-500 font-semibold mt-1">⚠ {errors.leave_from}</p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">
@@ -359,9 +378,17 @@ const Leaves = () => {
                     <input
                       type="date"
                       value={form.leave_to}
-                      onChange={(e) => setForm({ ...form, leave_to: e.target.value })}
-                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                      onChange={(e) => {
+                        setErrors((p) => ({ ...p, leave_to: undefined }));
+                        setForm({ ...form, leave_to: e.target.value });
+                      }}
+                      className={`w-full px-4 py-2.5 rounded-xl border text-sm focus:ring-2 focus:ring-blue-500 outline-none ${
+                        errors.leave_to ? "border-red-400 bg-red-50/50" : "border-gray-200"
+                      }`}
                     />
+                    {errors.leave_to && (
+                      <p className="text-xs text-red-500 font-semibold mt-1">⚠ {errors.leave_to}</p>
+                    )}
                   </div>
                 </div>
 
@@ -382,10 +409,18 @@ const Leaves = () => {
                   </label>
                   <textarea
                     value={form.leave_reason}
-                    onChange={(e) => setForm({ ...form, leave_reason: e.target.value })}
+                    onChange={(e) => {
+                      setErrors((p) => ({ ...p, leave_reason: undefined }));
+                      setForm({ ...form, leave_reason: e.target.value });
+                    }}
                     placeholder="Briefly describe your reason for leave..."
-                    className="w-full border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 rounded-xl p-4 h-32 focus:outline-none text-sm text-slate-700 resize-none transition-all"
+                    className={`w-full border rounded-xl p-4 h-32 focus:outline-none text-sm text-slate-700 resize-none transition-all ${
+                      errors.leave_reason ? "border-red-400 bg-red-50/50" : "border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                    }`}
                   />
+                  {errors.leave_reason && (
+                    <p className="text-xs text-red-500 font-semibold mt-1">⚠ {errors.leave_reason}</p>
+                  )}
                 </div>
 
                 {/* File Input for Medical Leaves */}
@@ -397,9 +432,17 @@ const Leaves = () => {
                     <input
                       type="file"
                       accept="image/*,application/pdf"
-                      onChange={(e) => setPrescriptionFile(e.target.files[0])}
-                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white cursor-pointer"
+                      onChange={(e) => {
+                        setErrors((p) => ({ ...p, prescription: undefined }));
+                        setPrescriptionFile(e.target.files[0]);
+                      }}
+                      className={`w-full px-4 py-2.5 rounded-xl border text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white cursor-pointer ${
+                        errors.prescription ? "border-red-400 bg-red-50/50" : "border-gray-200"
+                      }`}
                     />
+                    {errors.prescription && (
+                      <p className="text-xs text-red-500 font-semibold mt-1">⚠ {errors.prescription}</p>
+                    )}
                   </div>
                 )}
 

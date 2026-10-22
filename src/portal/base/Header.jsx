@@ -20,6 +20,8 @@ import {
   BookCheck,
   TextAlignJustify,
   Globe,
+  MessageSquare,
+  Building2,
 } from "lucide-react";
 import LogoImage from "/public/strativa.png";
 
@@ -239,6 +241,8 @@ const Header = ({ userLoggedOut, userLogged }) => {
           { to: "/hr360/user/employee-forms", icon: FileText, label: "Easy Forms" },
           { to: "/hr360/user/leaves", icon: IdCardLanyard, label: "Leaves" },
           { to: "/hr360/user/attendance", icon: BookCheck, label: "Attendance" },
+          { to: "/hr360/user/payslip", icon: FileText, label: "Salary & Payslips" },
+          { to: "/hr360/user/chat", icon: MessageSquare, label: "Firm Chat" },
           ...(isHRHead ? [
             { to: "/hr360/admin/employees", icon: IdCardLanyard, label: "Employees" },
             { to: "/hr360/admin/leave-types", icon: Gift, label: "Leave Types" },
@@ -248,6 +252,10 @@ const Header = ({ userLoggedOut, userLogged }) => {
       ? [
           { to: "/hr360/manager/form-requests", icon: FileText, label: "Awaiting Approvals" },
           { to: "/hr360/manager/leave-requests", icon: Gift, label: "Leave Approvals" },
+          { to: "/hr360/manager/employees", icon: IdCardLanyard, label: "Firm Employees" },
+          { to: "/hr360/manager/attendance", icon: BookCheck, label: "Attendance" },
+          { to: "/hr360/manager/payslip", icon: FileText, label: "Salary & Payslips" },
+          { to: "/hr360/manager/chat", icon: MessageSquare, label: "Firm Chat" },
           ...(userLogged.user_role === "manager" ? [
             { to: "/hr360/user/employee-forms", icon: FileText, label: "Easy Forms" }
           ] : []),
@@ -257,9 +265,12 @@ const Header = ({ userLoggedOut, userLogged }) => {
           ] : []),
         ]
       : [
+          { to: "/hr360/admin/firms", icon: Building2, label: "Organizations / Firms" },
           { to: "/hr360/admin/forms", icon: FileText, label: "Available Forms" },
           { to: "/hr360/admin/leave-types", icon: Gift, label: "Leave Types" },
-          { to: "/hr360/admin/employees", icon: IdCardLanyard, label: "Employees" },
+          { to: "/hr360/admin/employees", icon: IdCardLanyard, label: "All Employees" },
+          { to: "/hr360/admin/attendance", icon: BookCheck, label: "Attendance" },
+          { to: "/hr360/admin/payslip", icon: FileText, label: "Payroll & Payslips" },
         ];
 
   const profileBase =
@@ -324,6 +335,17 @@ const Header = ({ userLoggedOut, userLogged }) => {
 
           {/* Visitor Counter (Admin only) */}
           {isAdmin && <VisitorBadge />}
+
+          {/* Quick Chat Link (Employees and Managers only - strictly excludes Admin) */}
+          {!isAdmin && (
+            <Link
+              to={userLogged.user_role === "manager" || isCEO ? "/hr360/manager/chat" : "/hr360/user/chat"}
+              title="Firm Colleague Chat"
+              className="icon-btn p-2 rounded-xl text-slate-500 hover:text-indigo-600 cursor-pointer"
+            >
+              <MessageSquare size={20} strokeWidth={2} />
+            </Link>
+          )}
 
           {/* Notifications */}
           <div className="relative" ref={notificationsRef}>

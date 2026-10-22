@@ -11,6 +11,7 @@ import {
   Trash2,
   X,
   Globe,
+  Building2,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { gooeyToast } from "goey-toast";
@@ -222,6 +223,9 @@ const Employees = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const navigate = useNavigate();
 
+  const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+  const isAdmin = storedUser.user_role === "admin" || storedUser.user_role === 0;
+
   const fetchEmployees = async () => {
     try {
       const { data } = await axios.get(`${API_BASE_URL}/admin/all-employees`);
@@ -270,13 +274,20 @@ const Employees = () => {
                 <h1 className="page-title">Employee Directory</h1>
               </div>
               <p className="text-[13px] text-slate-400 font-medium ml-0.5">
-                Manage and view all registered staff members
+                {isAdmin ? "All staff across managed organizations" : "Colleagues within your firm"}
               </p>
             </div>
-            <Link to="/hr360/admin/add-employee" className="add-btn">
-              <UserPlus size={16} strokeWidth={2.5} />
-              Add New Employee
-            </Link>
+            {isAdmin ? (
+              <Link to="/hr360/admin/firms" className="add-btn">
+                <Building2 size={16} strokeWidth={2.5} />
+                Manage Organizations
+              </Link>
+            ) : (
+              <Link to="/hr360/manager/add-employee" className="add-btn">
+                <UserPlus size={16} strokeWidth={2.5} />
+                Add New Employee
+              </Link>
+            )}
           </div>
 
           {/* ── Search + Count ── */}
@@ -379,7 +390,13 @@ const Employees = () => {
                       <td className="px-6 py-3.5">
                         <div className="flex justify-center items-center gap-2">
                           <button
-                            onClick={() => navigate(`/hr360/admin/update-employee/${emp._id}`)}
+                            onClick={() =>
+                              navigate(
+                                isAdmin
+                                  ? `/hr360/admin/update-employee/${emp._id}`
+                                  : `/hr360/manager/update-employee/${emp._id}`
+                              )
+                            }
                             className="action-btn edit-btn"
                             title="Edit Employee"
                           >

@@ -12,6 +12,8 @@ import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { gooeyToast } from "goey-toast";
 import { z } from "zod";
+import { API_BASE_URL } from "../../config/api.js";
+import { showValidationToast } from "../../utils/formValidationToast.js";
 
 const kpiSchema = z.object({
   kpi_batch: z.string().min(1, "Batch is required").max(50, "Must be under 50 characters"),
@@ -182,12 +184,14 @@ const KPIRaise = () => {
     const result = kpiSchema.safeParse(formData);
     if (!result.success) {
       const fieldErrors = result.error.flatten().fieldErrors;
-      setErrors(Object.fromEntries(Object.entries(fieldErrors).map(([k, msgs]) => [k, msgs[0]])));
+      const errorMap = Object.fromEntries(Object.entries(fieldErrors).map(([k, msgs]) => [k, msgs[0]]));
+      setErrors(errorMap);
+      showValidationToast(Object.values(errorMap));
       return;
     }
     setErrors({});
     try {
-      const res = await axios.post("http://localhost:5000/user/raise-kpi", formData);
+      const res = await axios.post(`${API_BASE_URL}/user/raise-kpi`, formData);
       gooeyToast.success(res.data.message || "KPI submitted successfully", { fillColor: "#FFF", bounce: 0.45, timing: { displayDuration: 2500 } });
       setFormData(initialFormData);
       setErrors({});
